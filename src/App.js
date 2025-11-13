@@ -8,9 +8,9 @@ import SlowLetterPage from './pages/SlowLetter/SlowLetterPage';
 import MyPage from './pages/MyPage/MyPage';
 import DailyQuizPage from './pages/DailyQuiz/DailyQuizPage';
 import CreateQuizPage from './pages/DailyQuiz/CreateQuizPage';
-import QuizDetailPage from './pages/DailyQuiz/QuizDetailPage';
 import SignUpPage from './pages/Auth/SignUpPage';
-// import UserInfoPage from './pages/Auth/UserInfoPage'; // Removed import
+import AddDDayPage from './pages/DDay/AddDDayPage'; // Import AddDDayPage
+import QuizDetailPage from './pages/DailyQuiz/QuizDetailPage'; // Import QuizDetailPage
 import MainLayout from './components/layout/MainLayout';
 
 
@@ -26,6 +26,7 @@ function App() {
             <li><Link to="/onboarding">Onboarding</Link></li>
             <li><Link to="/daily-quiz">Daily Quiz</Link></li>
             <li><Link to="/dday">D-Day</Link></li>
+            <li><Link to="/dday/add">Add D-Day</Link></li> {/* Add link for AddDDayPage */}
             <li><Link to="/slow-letter">Slow Letter</Link></li>
             <li><Link to="/my-page">My Page</Link></li>
           </ul>
@@ -41,6 +42,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/dday" element={<DDayPage />} />
+            <Route path="/dday/add" element={<AddDDayPage />} /> {/* Add route for AddDDayPage */}
             <Route path="/slow-letter" element={<SlowLetterPage />} />
             <Route path="/my-page" element={<MyPage />} />
             <Route path="/daily-quiz" element={<DailyQuizPage />} />

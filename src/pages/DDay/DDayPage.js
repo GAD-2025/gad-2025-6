@@ -1,9 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import BottomNav from '../../components/layout/BottomNav';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
 
 const DDayPage = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  const handleAddDDayClick = () => {
+    navigate('/dday/add'); // Navigate to AddDDayPage
+  };
+
   return (
     <PageWrapper>
       <TopNav>
@@ -61,7 +68,7 @@ const DDayPage = () => {
           </DDayItem>
         </DDayList>
       </ContentWrapper>
-      <AddButton>
+      <AddButton onClick={handleAddDDayClick}> {/* Add onClick handler */}
         <PencilIcon style={{ width: 24, height: 24, fill: 'white' }} />
       </AddButton>
       <BottomNav />
