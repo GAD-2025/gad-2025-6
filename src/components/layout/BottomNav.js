@@ -28,11 +28,11 @@ const BottomNav = () => {
 
   return (
     <div style={{
-        width: 390,
+        width: '100%',
         height: 88,
         position: 'absolute',
         left: 0,
-        top: 756,
+        bottom: 0,
         background: 'rgba(255, 255, 255, 0.90)',
         boxShadow: '4px 4px 10px rgba(0, 0, 0, 0.10)',
         borderTopLeftRadius: 15,
