@@ -3,6 +3,13 @@ import { useNavigate } from 'react-router-dom';
 
 const QuizCard = ({ quiz, isHighlighted }) => {
   const navigate = useNavigate();
+
+  // Add null check for quiz
+  if (!quiz) {
+    console.error("QuizCard received undefined quiz prop.");
+    return null; // Or render a fallback UI
+  }
+
   const backgroundColor = isHighlighted ? '#FFF8E2' : '#FAFAFA';
 
   const handleClick = () => {

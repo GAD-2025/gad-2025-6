@@ -1,11 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom'; // Import Link
 import homeBackgroundImage from '../../assets/images/홈배경화면.jpeg'; // Import the background image
 
 const HomePage = () => {
   return (
     <div style={{width: 390, height: 844, position: 'relative', background: 'white', overflow: 'hidden'}}>
       {/* Background Image */}
-      <img style={{width: '100%', height: '100%', position: 'absolute', objectFit: 'cover'}} src={homeBackgroundImage} alt="Background" />
+      <img style={{width: '100%', height: '100%', position: 'absolute', objectFit: 'cover', objectPosition: 'center'}} src={homeBackgroundImage} alt="Background" />
       {/* Foreground Image - Keep as placeholder for now, as no specific image was provided for this */}
       <img style={{width: 387, height: 258, left: 2, top: 483, position: 'absolute'}} src="https://placehold.co/387x258" alt="Foreground" />
       <div style={{width: 390, left: 0, top: 0, position: 'absolute', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 507, display: 'inline-flex'}}>
@@ -25,12 +26,14 @@ const HomePage = () => {
               <div style={{color: 'white', fontSize: 17.61, fontFamily: 'Pangolin', fontWeight: '400', lineHeight: 23.48, wordWrap: 'break-word'}}>2</div>
               <div style={{width: 27.12, height: 16.08, background: '#F3F4F6', outline: '1px #F3F4F6 solid', outlineOffset: '-0.50px'}} />
             </div>
-            <div style={{alignSelf: 'stretch', height: 94, position: 'relative', background: '#FFF8E2', overflow: 'hidden', borderRadius: 16}}>
-              <div style={{width: 302, height: 54, left: 24, top: 20, position: 'absolute', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'inline-flex'}}>
-                <div style={{alignSelf: 'stretch', color: '#FFC90F', fontSize: 20, fontFamily: 'Pangolin', fontWeight: '400', lineHeight: 20, wordWrap: 'break-word'}}>Daily Quiz</div>
-                <div style={{alignSelf: 'stretch', flex: '1 1 0', color: '#979797', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>What is "I miss you." in Korean?</div>
+            <Link to="/daily-quiz" style={{textDecoration: 'none', cursor: 'pointer', alignSelf: 'stretch'}}> {/* Added Link */}
+              <div style={{alignSelf: 'stretch', height: 94, position: 'relative', background: '#FFF8E2', overflow: 'hidden', borderRadius: 16}}>
+                <div style={{width: 302, height: 54, left: 24, top: 20, position: 'absolute', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'inline-flex'}}>
+                  <div style={{alignSelf: 'stretch', color: '#FFC90F', fontSize: 20, fontFamily: 'Pangolin', fontWeight: '400', lineHeight: 20, wordWrap: 'break-word'}}>Daily Quiz</div>
+                  <div style={{alignSelf: 'stretch', flex: '1 1 0', color: '#979797', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>What is "I miss you." in Korean?</div>
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
