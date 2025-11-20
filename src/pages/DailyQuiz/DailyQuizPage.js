@@ -57,7 +57,7 @@ const DailyQuizPage = () => {
       {activeTab === 'received' ? (
         <ReceivedQuizList quizData={quizData} />
       ) : (
-        <CreatedQuizList quizData={createdQuizData} />
+        {/* <CreatedQuizList quizData={createdQuizData} /> */}
       )}
 
       {/* Floating Action Button */}
