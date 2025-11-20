@@ -1,12 +1,23 @@
 import React from 'react';
 import styled from 'styled-components';
 import BottomNav from '../../components/layout/BottomNav';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 import { Link } from 'react-router-dom'; // Import Link
 import homeBackgroundImage from '../../assets/images/홈배경화면.jpeg'; // Import the background image
 
 
 const HomePage = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  const handleSignInClick = () => {
+    navigate('/signin');
+  };
+
+  const handleOnboardingClick = () => {
+    navigate('/onboarding');
+  };
+
   return (
     <PageWrapper>
       <BackgroundImage src={homeBackgroundImage} alt="Background" />
@@ -39,6 +50,14 @@ const HomePage = () => {
           </Link>
         </CardsWrapper>
       </ContentWrapper>
+      <FabWrapper>
+        <OnboardingFab onClick={handleOnboardingClick}>
+          Onboarding
+        </OnboardingFab>
+        <SignInFab onClick={handleSignInClick}>
+          Sign In
+        </SignInFab>
+      </FabWrapper>
       <BottomNav />
     </PageWrapper>
   );
@@ -229,6 +248,34 @@ const QuizQuestion = styled.div`
   font-size: 20px;
   font-family: 'Pretendard', sans-serif;
   font-weight: 700;
+`;
+
+const FabWrapper = styled.div`
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const SignInFab = styled.div`
+  background-color: #0C0C0C;
+  color: white;
+  border-radius: 100px;
+  padding: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+`;
+
+const OnboardingFab = styled(SignInFab)`
+  background-color: #1E90FF; // A different color to distinguish
 `;
 
 

@@ -1,12 +1,18 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 const OnboardingPage = () => {
+  const navigate = useNavigate();
+
+  const handleGoHomeClick = () => {
+    navigate('/');
+  };
+
   return (
     <OnboardingWrapper>
       <Title>Onboarding</Title>
-      <StyledLink to="/signup">Go to Sign Up</StyledLink>
+      <GoHomeButton onClick={handleGoHomeClick}>Go to Home</GoHomeButton>
     </OnboardingWrapper>
   );
 };
@@ -28,13 +34,14 @@ const Title = styled.h1`
   margin-bottom: 2rem;
 `;
 
-const StyledLink = styled(Link)`
+const GoHomeButton = styled.button`
   padding: 1rem 2rem;
   font-size: 1.2rem;
   color: #fff;
   background-color: #007bff;
   border-radius: 5px;
-  text-decoration: none;
+  border: none;
+  cursor: pointer;
   transition: background-color 0.3s;
 
   &:hover {

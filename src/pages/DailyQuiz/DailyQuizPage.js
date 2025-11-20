@@ -37,7 +37,9 @@ const DailyQuizPage = () => {
           <div style={{textAlign: 'center', color: activeTab === 'received' ? '#FFC90F' : '#9E9FAD', fontSize: 16, fontWeight: '700'}}>Received</div>
         </div>
         <div
-          style={{
+햣
+
+style={{
             width: 106,
             paddingTop: 14,
             paddingBottom: 14,
@@ -57,7 +59,7 @@ const DailyQuizPage = () => {
       {activeTab === 'received' ? (
         <ReceivedQuizList quizData={quizData} />
       ) : (
-        {/* <CreatedQuizList quizData={createdQuizData} /> */}
+        <CreatedQuizList quizData={createdQuizData} />
       )}
 
       {/* Floating Action Button */}

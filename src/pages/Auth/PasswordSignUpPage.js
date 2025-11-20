@@ -2,50 +2,51 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
-const SignUpPage = () => {
+const PasswordSignUpPage = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
 
-  const isButtonEnabled = name.length > 0 && email.length > 0;
+  const isButtonEnabled = password.length > 0 && passwordConfirmation.length > 0;
 
-  const handleNextClick = () => {
+  const handleSignUpClick = () => {
     if (isButtonEnabled) {
-      console.log('Name:', name, 'Email:', email);
-      navigate('/signup/password');
+      // Logic to handle final sign up
+      console.log('Password:', password);
+      navigate('/signup/invitation');
     }
   };
 
   return (
     <PageWrapper>
-      <Header>Sign Up</Header>
-      <Subtitle>Welcome to TODAK!</Subtitle>
+      <Header>Password</Header>
+      <Subtitle>Please set a password.</Subtitle>
 
       <InputContainer>
-        <InputLabel>Name</InputLabel>
+        <InputLabel>Password</InputLabel>
         <StyledInput
-          type="text"
-          placeholder="Enter your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
-        <InputLabel>E-mail</InputLabel>
+        <InputLabel>Password confirmation</InputLabel>
         <StyledInput
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="password"
+          placeholder="Confirm your password"
+          value={passwordConfirmation}
+          onChange={(e) => setPasswordConfirmation(e.target.value)}
         />
       </InputContainer>
 
-      <NextButton onClick={handleNextClick} disabled={!isButtonEnabled}>
-        Next
-      </NextButton>
+      <SignUpButton onClick={handleSignUpClick} disabled={!isButtonEnabled}>
+        Sign up
+      </SignUpButton>
     </PageWrapper>
   );
 };
 
-export default SignUpPage;
+export default PasswordSignUpPage;
 
 const PageWrapper = styled.div`
   display: flex;
@@ -102,7 +103,7 @@ const StyledInput = styled.input`
   }
 `;
 
-const NextButton = styled.button`
+const SignUpButton = styled.button`
   width: 100%;
   max-width: 350px;
   padding: 18px;

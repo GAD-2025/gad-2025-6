@@ -8,7 +8,11 @@ import SlowLetterPage from './pages/SlowLetter/SlowLetterPage';
 import MyPage from './pages/MyPage/MyPage';
 import DailyQuizPage from './pages/DailyQuiz/DailyQuizPage';
 import CreateQuizPage from './pages/DailyQuiz/CreateQuizPage';
-import SignUpPage from './pages/Auth/SignUpPage';
+import SignInPage from './pages/Auth/SignInPage'; // Changed from SignUpPage
+import SignUpPage from './pages/Auth/SignUpPage'; // Added for the new page
+import PasswordSignUpPage from './pages/Auth/PasswordSignUpPage'; // Added for the password step
+import InvitationCodePage from './pages/Auth/InvitationCodePage'; // Added for the invitation code step
+import WaitingForPartnerPage from './pages/Auth/WaitingForPartnerPage'; // Added for the waiting step
 import AddDDayPage from './pages/DDay/AddDDayPage'; // Import AddDDayPage
 import QuizDetailPage from './pages/DailyQuiz/QuizDetailPage'; // Import QuizDetailPage
 import MainLayout from './components/layout/MainLayout';
@@ -18,23 +22,15 @@ function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        {/* Temporary Navigation for Testing */}
-        <nav style={{ padding: '10px', background: '#f0f0f0', borderBottom: '1px solid #ccc' }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', gap: '15px' }}>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/signup">Sign Up</Link></li>
-            <li><Link to="/onboarding">Onboarding</Link></li>
-            <li><Link to="/daily-quiz">Daily Quiz</Link></li>
-            <li><Link to="/dday">D-Day</Link></li>
-            <li><Link to="/dday/add">Add D-Day</Link></li> {/* Add link for AddDDayPage */}
-            <li><Link to="/slow-letter">Slow Letter</Link></li>
-            <li><Link to="/my-page">My Page</Link></li>
-          </ul>
-        </nav>
+
 
         <Routes>
           {/* Authentication & Onboarding Routes (without MainLayout) */}
-          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/signin" element={<SignInPage />} /> {/* Changed from /signup */}
+          <Route path="/signup" element={<SignUpPage />} /> {/* Added for new page */}
+          <Route path="/signup/password" element={<PasswordSignUpPage />} /> {/* Added for password step */}
+          <Route path="/signup/invitation" element={<InvitationCodePage />} /> {/* Added for invitation code step */}
+          <Route path="/signup/waiting" element={<WaitingForPartnerPage />} /> {/* Added for waiting step */}
           {/* <Route path="/user-info" element={<UserInfoPage />} /> Removed route */}
           <Route path="/onboarding" element={<OnboardingPage />} />
 
