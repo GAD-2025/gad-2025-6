@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import BottomNav from '../../components/layout/BottomNav';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 import { Link } from 'react-router-dom'; // Import Link
@@ -51,14 +50,13 @@ const HomePage = () => {
         </CardsWrapper>
       </ContentWrapper>
       <FabWrapper>
-        <OnboardingFab onClick={handleOnboardingClick}>
-          Onboarding
-        </OnboardingFab>
         <SignInFab onClick={handleSignInClick}>
           Sign In
         </SignInFab>
+        <OnboardingFab onClick={handleOnboardingClick}>
+          Onboarding
+        </OnboardingFab>
       </FabWrapper>
-      <BottomNav />
     </PageWrapper>
   );
 };
@@ -252,7 +250,7 @@ const QuizQuestion = styled.div`
 
 const FabWrapper = styled.div`
   position: absolute;
-  bottom: 80px;
+  bottom: 108px;
   right: 20px;
   display: flex;
   flex-direction: column;
