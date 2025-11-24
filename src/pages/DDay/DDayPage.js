@@ -1,14 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/layout/BottomNav';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
+import { bucketListData } from '../../data/bucketListData';
+import { ddayData } from '../../data/ddayData';
 
 const DDayPage = () => {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('dday');
+  const [bucketList, setBucketList] = useState(bucketListData);
+  const [ddayList, setDdayList] = useState(ddayData);
 
-  const handleAddDDayClick = () => {
-    navigate('/dday/add'); // Navigate to AddDDayPage
+  const handleAddButtonClick = () => {
+    if (activeTab === 'dday') {
+      navigate('/dday/add');
+    } else {
+      navigate('/dday/add-bucket-list');
+    }
+  };
+
+  const handleDDayItemClick = (item) => {
+    navigate(`/dday/${item.id}`, { state: { item } });
+  };
+
+  const handleBucketListItemClick = (item) => {
+    navigate(`/dday/bucket-list/${item.id}`, { state: { item } });
+  };
+
+  const handleToggleComplete = (id) => {
+    setBucketList(prevList => {
+      const updatedList = prevList.map(item =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      );
+      return updatedList.sort((a, b) => a.completed - b.completed);
+    });
+  };
+
+  const calculateDday = (date) => {
+    const today = new Date();
+    const targetDate = new Date(date);
+    const diffTime = targetDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? `D-${diffDays}` : `D+${-diffDays}`;
   };
 
   return (
@@ -26,56 +60,66 @@ const DDayPage = () => {
         <Header>
           <Title>D-day & Bucket List</Title>
           <TabWrapper>
-            <Tab active>D-day</Tab>
-            <Tab>Bucket List</Tab>
+            <Tab active={activeTab === 'dday'} onClick={() => setActiveTab('dday')}>D-day</Tab>
+            <Tab active={activeTab === 'bucketList'} onClick={() => setActiveTab('bucketList')}>Bucket List</Tab>
           </TabWrapper>
         </Header>
-        <DDayCard>
-          <DDayText>Time Remaining Until Reunion</DDayText>
-          <DDayValue>Set D-day</DDayValue>
-          <DDaySubText>Enter the date to start the excitement!</DDaySubText>
-        </DDayCard>
-        <DDayList>
-          <DDayItem>
-            <DDayItemBar />
-            <DDayItemContent>
-              <DDayItemInfo>
-                <DDayItemDate>December 25, 2025</DDayItemDate>
-                <DDayItemTitle>London trip</DDayItemTitle>
-              </DDayItemInfo>
-              <DDayItemDDay>D-60</DDayItemDDay>
-            </DDayItemContent>
-          </DDayItem>
-          <DDayItem>
-            <DDayItemBar />
-            <DDayItemContent>
-              <DDayItemInfo>
-                <DDayItemDate>March 21, 2026</DDayItemDate>
-                <DDayItemTitle>Our Anniversary</DDayItemTitle>
-              </DDayItemInfo>
-              <DDayItemDDay>D-201</DDayItemDDay>
-            </DDayItemContent>
-          </DDayItem>
-          <DDayItem>
-            <DDayItemBar />
-            <DDayItemContent>
-              <DDayItemInfo>
-                <DDayItemDate>March 21, 2026</DDayItemDate>
-                <DDayItemTitle>Next Visit to Paris</DDayItemTitle>
-              </DDayItemInfo>
-              <DDayItemDDay>D-201</DDayItemDDay>
-            </DDayItemContent>
-          </DDayItem>
-        </DDayList>
+
+        {activeTab === 'dday' ? (
+          <>
+            <DDayCard>
+              <DDayText>Time Remaining Until Reunion</DDayText>
+              <DDayValue>Set D-day</DDayValue>
+              <DDaySubText>Enter the date to start the excitement!</DDaySubText>
+            </DDayCard>
+            <DDayList>
+              {ddayList.map(item => (
+                <DDayItem key={item.id} onClick={() => handleDDayItemClick(item)}>
+                  <DDayItemBar />
+                  <DDayItemContent>
+                    <DDayItemInfo>
+                      <DDayItemDate>{item.date}</DDayItemDate>
+                      <DDayItemTitle>{item.title}</DDayItemTitle>
+                    </DDayItemInfo>
+                    <DDayItemDDay>{calculateDday(item.date)}</DDayItemDDay>
+                  </DDayItemContent>
+                </DDayItem>
+              ))}
+            </DDayList>
+          </>
+        ) : (
+          <BucketListContainer>
+            {bucketList.map((item) => (
+              <BucketListItemWrapper key={item.id}>
+                <BucketListItemBar completed={item.completed} />
+                <BucketListItemContent completed={item.completed}>
+                  <div onClick={(e) => { e.stopPropagation(); handleToggleComplete(item.id); }}>
+                    {item.completed ? (
+                      <CompletedCheckbox>
+                        <CheckedIcon viewBox="0 0 24 24">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                        </CheckedIcon>
+                      </CompletedCheckbox>
+                    ) : (
+                      <EmptyCheckbox />
+                    )}
+                  </div>
+                  <BucketListItemText completed={item.completed} onClick={() => handleBucketListItemClick(item)}>
+                    {item.title}
+                  </BucketListItemText>
+                </BucketListItemContent>
+              </BucketListItemWrapper>
+            ))}
+          </BucketListContainer>
+        )}
       </ContentWrapper>
-      <AddButton onClick={handleAddDDayClick}> {/* Add onClick handler */}
+      <AddButton onClick={handleAddButtonClick}>
         <PencilIcon style={{ width: 24, height: 24, fill: 'white' }} />
       </AddButton>
       <BottomNav />
     </PageWrapper>
   );
 };
-
 export default DDayPage;
 
 const PageWrapper = styled.div`
@@ -284,4 +328,80 @@ const AddButton = styled.div`
   right: 20px;
   bottom: 120px;
   cursor: pointer;
+`;
+
+const BucketListContainer = styled.div`
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const BucketListItemWrapper = styled.div`
+  width: 350px;
+  height: 54px;
+  position: relative;
+  cursor: pointer;
+`;
+
+const BucketListItemBar = styled.div`
+  width: 12.68px;
+  height: 51.69px;
+  left: 0px;
+  top: 0px;
+  position: absolute;
+  background: ${(props) => (props.completed ? '#4E78D2' : '#9CB06E')};
+  border-radius: 5.07px;
+`;
+
+const BucketListItemContent = styled.div`
+  width: 347.46px;
+  height: 54px;
+  padding: 8.24px 6.34px;
+  left: 2.54px;
+  top: 0px;
+  position: absolute;
+  background: #f4f8ea;
+  border-radius: 5.07px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5.07px;
+  box-sizing: border-box;
+`;
+
+const EmptyCheckbox = styled.div`
+  width: 16px;
+  height: 17px;
+  position: relative;
+  background: white;
+  border-radius: 1.27px;
+  border: 0.63px #6F737D solid;
+`;
+
+const CompletedCheckbox = styled.div`
+  width: 16px;
+  height: 17px;
+  position: relative;
+  background: #4E78D2;
+  overflow: hidden;
+  border-radius: 1.27px;
+`;
+
+const CheckedIcon = styled.svg`
+  width: 12px;
+  height: 9px;
+  left: 2.12px;
+  top: 4.43px;
+  position: absolute;
+  fill: white;
+`;
+
+const BucketListItemText = styled.div`
+  color: black;
+  font-size: 16px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  text-decoration: ${(props) => (props.completed ? 'line-through' : 'none')};
+  word-wrap: break-word;
 `;

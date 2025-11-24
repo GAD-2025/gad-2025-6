@@ -32,11 +32,11 @@ const HomePage = () => {
         </TopNav>
         <CardsWrapper>
           <CardRow>
-            <DDayCard>
+            <DDayCard onClick={() => navigate('/dday')} style={{ cursor: 'pointer' }}>
               <DDayValue>D-22</DDayValue>
               <DDayText>London trip London trip London trip</DDayText>
             </DDayCard>
-            <NewLetterCard>
+            <NewLetterCard onClick={() => navigate('/slow-letter')} style={{ cursor: 'pointer' }}>
               <NewLetterText>New!</NewLetterText>
               <NewLetterCount>2</NewLetterCount>
             </NewLetterCard>

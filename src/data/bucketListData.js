@@ -1,0 +1,58 @@
+export const bucketListData = [
+    {
+      id: 1,
+      title: 'See the Eiffel Tower at Night',
+      completed: false,
+      date: '2025.12.31',
+      description: 'Experience the magical illumination of the Eiffel Tower after sunset.',
+    },
+    {
+      id: 2,
+      title: 'Take Photos on the Brooklyn Bridge',
+      completed: true,
+      date: '2025.11.15',
+      description: 'Capture iconic shots with the stunning backdrop of the Brooklyn Bridge and Manhattan skyline.',
+    },
+    {
+      id: 3,
+      title: 'Save $800 for USA Trip',
+      completed: false,
+      date: '2026.03.01',
+      description: 'Financial goal to save enough money for an exciting trip across the USA.',
+    },
+    {
+      id: 4,
+      title: 'Learn a New Language',
+      completed: false,
+      date: '2026.06.30',
+      description: 'Start learning Spanish to prepare for future travels.',
+    },
+    {
+      id: 5,
+      title: 'Run a Marathon',
+      completed: false,
+      date: '2026.10.20',
+      description: 'Train and complete a full marathon.',
+    },
+    {
+      id: 6,
+      title: 'Volunteer for a Cause',
+      completed: true,
+      date: '2025.09.10',
+      description: 'Dedicate time to a charity or community service.',
+    },
+    {
+      id: 7,
+      title: 'Read 50 Books in a Year',
+      completed: false,
+      date: '2026.12.31',
+      description: 'Challenge myself to read a diverse range of 50 books.',
+    },
+    {
+      id: 8,
+      title: 'Visit all 7 Continents',
+      completed: false,
+      date: '2030.01.01',
+      description: 'A long-term goal to travel and experience every continent.',
+    },
+  ];

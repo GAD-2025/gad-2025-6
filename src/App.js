@@ -15,6 +15,14 @@ import InvitationCodePage from './pages/Auth/InvitationCodePage'; // Added for t
 import WaitingForPartnerPage from './pages/Auth/WaitingForPartnerPage'; // Added for the waiting step
 import AddDDayPage from './pages/DDay/AddDDayPage'; // Import AddDDayPage
 import QuizDetailPage from './pages/DailyQuiz/QuizDetailPage'; // Import QuizDetailPage
+import SlowLetterDetailPage from './pages/SlowLetter/SlowLetterDetailPage';
+import WriteLetterPage from './pages/SlowLetter/WriteLetterPage';
+import AddBucketListPage from './pages/DDay/AddBucketListPage';
+import BucketListDetailPage from './pages/DDay/BucketListDetailPage';
+import EditBucketListPage from './pages/DDay/EditBucketListPage';
+import DDayDetailPage from './pages/DDay/DDayDetailPage';
+import EditDDayPage from './pages/DDay/EditDDayPage';
+import SettingsPage from './pages/MyPage/SettingsPage';
 import MainLayout from './components/layout/MainLayout';
 
 
@@ -39,8 +47,16 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/dday" element={<DDayPage />} />
             <Route path="/dday/add" element={<AddDDayPage />} /> {/* Add route for AddDDayPage */}
+            <Route path="/dday/add-bucket-list" element={<AddBucketListPage />} />
+            <Route path="/dday/bucket-list/edit/:bucketListId" element={<EditBucketListPage />} />
+            <Route path="/dday/bucket-list/:bucketListId" element={<BucketListDetailPage />} />
+            <Route path="/dday/:ddayId" element={<DDayDetailPage />} />
+            <Route path="/dday/edit/:ddayId" element={<EditDDayPage />} />
             <Route path="/slow-letter" element={<SlowLetterPage />} />
+            <Route path="/slow-letter/write" element={<WriteLetterPage />} />
+            <Route path="/slow-letter/:letterId" element={<SlowLetterDetailPage />} />
             <Route path="/my-page" element={<MyPage />} />
+            <Route path="/my-page/settings" element={<SettingsPage />} />
             <Route path="/daily-quiz" element={<DailyQuizPage />} />
             <Route path="/daily-quiz/:quizId" element={<QuizDetailPage />} />
             <Route path="/create-quiz" element={<CreateQuizPage />} />
