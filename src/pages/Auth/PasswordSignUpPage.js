@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const PasswordSignUpPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { name, email } = location.state || {};
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
 
@@ -11,9 +13,12 @@ const PasswordSignUpPage = () => {
 
   const handleSignUpClick = () => {
     if (isButtonEnabled) {
+      if (password !== passwordConfirmation) {
+        alert("Passwords do not match.");
+        return;
+      }
       // Logic to handle final sign up
-      console.log('Password:', password);
-      navigate('/signup/invitation');
+      navigate('/signup/invitation', { state: { name, email, password } });
     }
   };
 

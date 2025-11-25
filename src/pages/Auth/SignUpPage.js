@@ -11,8 +11,7 @@ const SignUpPage = () => {
 
   const handleNextClick = () => {
     if (isButtonEnabled) {
-      console.log('Name:', name, 'Email:', email);
-      navigate('/signup/password');
+      navigate('/signup/password', { state: { name, email } });
     }
   };
 

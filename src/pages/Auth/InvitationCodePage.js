@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { signup } from '../../api/auth';
 
 const InvitationCodePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { name, email, password } = location.state || {};
   const [myCode, setMyCode] = useState('');
   const [opponentCode, setOpponentCode] = useState('');
-
-  const hasOpponentCode = opponentCode.length > 0;
 
   useEffect(() => {
     // Generate a random 6-character code when the component mounts
@@ -25,16 +26,29 @@ const InvitationCodePage = () => {
   const handleCopyCode = () => {
     navigator.clipboard.writeText(myCode);
     alert('Your code has been copied!');
-    navigate('/signup/waiting', { state: { myCode } });
+    // The user might want to navigate to a waiting screen here, keeping original logic
+    // navigate('/signup/waiting', { state: { myCode } });
   };
 
-  const handleConnectClick = () => {
-    if (hasOpponentCode) {
-      console.log("Connecting with opponent's code:", opponentCode);
-      navigate('/onboarding');
-    } else {
-      // Logic for when there's no opponent code (maybe show an error)
-      console.log("No opponent code entered.");
+  const handleConnectClick = async () => {
+    if (!name || !email || !password) {
+      alert("Something went wrong, please start the sign up process again.");
+      navigate('/signup');
+      return;
+    }
+    
+    try {
+      const result = await signup(name, email, password);
+      if (result.success) {
+        // The original logic connected with an opponent, we will just navigate to onboarding
+        console.log("Signup successful, connecting with opponent's code:", opponentCode);
+        navigate('/onboarding');
+      } else {
+        alert(`Sign up failed: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert('An error occurred during sign up.');
     }
   };
 
@@ -64,7 +78,7 @@ const InvitationCodePage = () => {
       </CodeContainer>
 
       <ConnectButton onClick={handleConnectClick}>
-        {hasOpponentCode ? 'Complete' : 'Connect'}
+        Complete
       </ConnectButton>
     </PageWrapper>
   );

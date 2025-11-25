@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'; // Re-added Link
 import './App.css';
+import { AuthProvider } from './context/AuthContext';
 import OnboardingPage from './pages/Onboarding/OnboardingPage';
 import HomePage from './pages/Home/HomePage';
 import DDayPage from './pages/DDay/DDayPage';
@@ -29,42 +30,44 @@ import MainLayout from './components/layout/MainLayout';
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
 
 
-        <Routes>
-          {/* Authentication & Onboarding Routes (without MainLayout) */}
-          <Route path="/signin" element={<SignInPage />} /> {/* Changed from /signup */}
-          <Route path="/signup" element={<SignUpPage />} /> {/* Added for new page */}
-          <Route path="/signup/password" element={<PasswordSignUpPage />} /> {/* Added for password step */}
-          <Route path="/signup/invitation" element={<InvitationCodePage />} /> {/* Added for invitation code step */}
-          <Route path="/signup/waiting" element={<WaitingForPartnerPage />} /> {/* Added for waiting step */}
-          {/* <Route path="/user-info" element={<UserInfoPage />} /> Removed route */}
-          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Routes>
+            {/* Authentication & Onboarding Routes (without MainLayout) */}
+            <Route path="/signin" element={<SignInPage />} /> {/* Changed from /signup */}
+            <Route path="/signup" element={<SignUpPage />} /> {/* Added for new page */}
+            <Route path="/signup/password" element={<PasswordSignUpPage />} /> {/* Added for password step */}
+            <Route path="/signup/invitation" element={<InvitationCodePage />} /> {/* Added for invitation code step */}
+            <Route path="/signup/waiting" element={<WaitingForPartnerPage />} /> {/* Added for waiting step */}
+            {/* <Route path="/user-info" element={<UserInfoPage />} /> Removed route */}
+            <Route path="/onboarding" element={<OnboardingPage />} />
 
-          {/* Main Application Routes (with MainLayout) */}
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/dday" element={<DDayPage />} />
-            <Route path="/dday/add" element={<AddDDayPage />} /> {/* Add route for AddDDayPage */}
-            <Route path="/dday/add-bucket-list" element={<AddBucketListPage />} />
-            <Route path="/dday/bucket-list/edit/:bucketListId" element={<EditBucketListPage />} />
-            <Route path="/dday/bucket-list/:bucketListId" element={<BucketListDetailPage />} />
-            <Route path="/dday/:ddayId" element={<DDayDetailPage />} />
-            <Route path="/dday/edit/:ddayId" element={<EditDDayPage />} />
-            <Route path="/slow-letter" element={<SlowLetterPage />} />
-            <Route path="/slow-letter/write" element={<WriteLetterPage />} />
-            <Route path="/slow-letter/:letterId" element={<SlowLetterDetailPage />} />
-            <Route path="/my-page" element={<MyPage />} />
-            <Route path="/my-page/settings" element={<SettingsPage />} />
-            <Route path="/daily-quiz" element={<DailyQuizPage />} />
-            <Route path="/daily-quiz/:quizId" element={<QuizDetailPage />} />
-            <Route path="/create-quiz" element={<CreateQuizPage />} />
-            {/* Fallback route for main app */}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            {/* Main Application Routes (with MainLayout) */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/dday" element={<DDayPage />} />
+              <Route path="/dday/add" element={<AddDDayPage />} /> {/* Add route for AddDDayPage */}
+              <Route path="/dday/add-bucket-list" element={<AddBucketListPage />} />
+              <Route path="/dday/bucket-list/edit/:bucketListId" element={<EditBucketListPage />} />
+              <Route path="/dday/bucket-list/:bucketListId" element={<BucketListDetailPage />} />
+              <Route path="/dday/:ddayId" element={<DDayDetailPage />} />
+              <Route path="/dday/edit/:ddayId" element={<EditDDayPage />} />
+              <Route path="/slow-letter" element={<SlowLetterPage />} />
+              <Route path="/slow-letter/write" element={<WriteLetterPage />} />
+              <Route path="/slow-letter/:letterId" element={<SlowLetterDetailPage />} />
+              <Route path="/my-page" element={<MyPage />} />
+              <Route path="/my-page/settings" element={<SettingsPage />} />
+              <Route path="/daily-quiz" element={<DailyQuizPage />} />
+              <Route path="/daily-quiz/:quizId" element={<QuizDetailPage />} />
+              <Route path="/create-quiz" element={<CreateQuizPage />} />
+              {/* Fallback route for main app */}
+              <Route path="*" element={<Navigate to="/" />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </div>
   );
 }
