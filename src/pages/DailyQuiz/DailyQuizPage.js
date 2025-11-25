@@ -1,18 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
 import ReceivedQuizList from './ReceivedQuizList';
 import CreatedQuizList from './CreatedQuizList';
 import { quizData, createdQuizData } from '../../data/quizData';
 
-
 const DailyQuizPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('received'); // State for active tab
+  const [activeTab, setActiveTab] = useState('received');
+  const [showOnlyNew, setShowOnlyNew] = useState(false);
+
+  const hasNewQuiz = useMemo(() => quizData.some(quiz => quiz.isNew), []);
 
   const handleCreateQuizClick = () => {
     navigate('/create-quiz');
   };
+
+  const handleReceivedClick = () => {
+    setActiveTab('received');
+    setShowOnlyNew(false);
+  };
+
+  const handleReceivedDoubleClick = () => {
+    setActiveTab('received');
+    setShowOnlyNew(true);
+  };
+
+  const displayedQuizzes = useMemo(() => {
+    if (activeTab === 'received') {
+      if (showOnlyNew) {
+        const firstNewQuiz = quizData.find(q => q.isNew);
+        return firstNewQuiz ? [firstNewQuiz] : [];
+      } else {
+        return quizData;
+      }
+    } else {
+      return createdQuizData;
+    }
+  }, [activeTab, showOnlyNew, quizData, createdQuizData]);
 
   return (
     <div style={{height: 844, position: 'relative', background: 'white', display: 'flex', flexDirection: 'column'}}>
@@ -32,14 +57,16 @@ const DailyQuizPage = () => {
             display: 'flex',
             cursor: 'pointer'
           }}
-          onClick={() => setActiveTab('received')}
+          onClick={handleReceivedClick}
+          onDoubleClick={handleReceivedDoubleClick}
         >
-          <div style={{textAlign: 'center', color: activeTab === 'received' ? '#FFC90F' : '#9E9FAD', fontSize: 16, fontWeight: '700'}}>Received</div>
+          <div style={{textAlign: 'center', color: activeTab === 'received' ? '#FFC90F' : '#9E9FAD', fontSize: 16, fontWeight: '700'}}>
+            Received
+            {hasNewQuiz && showOnlyNew && <span style={{color: 'red', marginLeft: 4}}>New!</span>}
+          </div>
         </div>
         <div
-햣
-
-style={{
+          style={{
             width: 106,
             paddingTop: 14,
             paddingBottom: 14,
@@ -57,7 +84,7 @@ style={{
 
       {/* Quiz Card List */}
       {activeTab === 'received' ? (
-        <ReceivedQuizList quizData={quizData} />
+        <ReceivedQuizList quizData={displayedQuizzes} obscureTitles={showOnlyNew} />
       ) : (
         <CreatedQuizList quizData={createdQuizData} />
       )}

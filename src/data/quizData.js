@@ -1,6 +1,6 @@
 const quizData = [
-  { id: 1, title: 'Camisa', description: 'The blue shirt I often wear in Portuguese', date: '2025. Oct. 20' },
-  { id: 2, title: 'Borracha', description: 'An eraser for my mistakes', date: '2025. Oct. 19' },
+  { id: 1, title: 'Camisa', description: 'The blue shirt I often wear in Portuguese', date: '2025. Oct. 20', isNew: true },
+  { id: 2, title: 'Borracha', description: 'An eraser for my mistakes', date: '2025. Oct. 19', isNew: true },
   { id: 3, title: 'Tenedor', description: 'A fork to eat my lunch', date: '2025. Oct. 18' },
   { id: 4, title: 'Libro', description: 'A book I read yesterday', date: '2025. Oct. 17' },
   { id: 5, title: 'Ventana', description: 'A window with a view', date: '2025. Oct. 16' },

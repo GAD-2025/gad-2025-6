@@ -8,7 +8,7 @@ const splitIntoColumns = (data) => {
   return [column1, column2];
 };
 
-const ReceivedQuizList = ({ quizData }) => {
+const ReceivedQuizList = ({ quizData, obscureTitles }) => {
   const [column1, column2] = splitIntoColumns(quizData);
 
   return (
@@ -16,13 +16,13 @@ const ReceivedQuizList = ({ quizData }) => {
       {/* Column 1 */}
       <div style={{width: 169, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'inline-flex'}}>
         {column1.map((item, index) => (
-          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 === 0} />
+          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 === 0} obscureTitle={obscureTitles} />
         ))}
       </div>
       {/* Column 2 */}
       <div style={{width: 169, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'inline-flex'}}>
         {column2.map((item, index) => (
-          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 !== 0} />
+          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 !== 0} obscureTitle={obscureTitles} />
         ))}
       </div>
     </div>
