@@ -27,28 +27,31 @@ import SettingsPage from './pages/MyPage/SettingsPage';
 import MainLayout from './components/layout/MainLayout';
 
 
+import PrivateRoute from './components/common/PrivateRoute';
+import useAuth from './hooks/useAuth';
+
+
 function App() {
+  const { user } = useAuth();
+
   return (
     <div className="App">
-      <AuthProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <Routes>
+          {/* Authentication & Onboarding Routes (without MainLayout) */}
+          <Route path="/signin" element={<SignInPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/signup/password" element={<PasswordSignUpPage />} />
+          <Route path="/signup/invitation" element={<InvitationCodePage />} />
+          <Route path="/signup/waiting" element={<WaitingForPartnerPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
 
-
-          <Routes>
-            {/* Authentication & Onboarding Routes (without MainLayout) */}
-            <Route path="/signin" element={<SignInPage />} /> {/* Changed from /signup */}
-            <Route path="/signup" element={<SignUpPage />} /> {/* Added for new page */}
-            <Route path="/signup/password" element={<PasswordSignUpPage />} /> {/* Added for password step */}
-            <Route path="/signup/invitation" element={<InvitationCodePage />} /> {/* Added for invitation code step */}
-            <Route path="/signup/waiting" element={<WaitingForPartnerPage />} /> {/* Added for waiting step */}
-            {/* <Route path="/user-info" element={<UserInfoPage />} /> Removed route */}
-            <Route path="/onboarding" element={<OnboardingPage />} />
-
-            {/* Main Application Routes (with MainLayout) */}
+          {/* Main Application Routes (with MainLayout) */}
+          <Route element={<PrivateRoute />}>
             <Route element={<MainLayout />}>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/home" element={<HomePage />} />
               <Route path="/dday" element={<DDayPage />} />
-              <Route path="/dday/add" element={<AddDDayPage />} /> {/* Add route for AddDDayPage */}
+              <Route path="/dday/add" element={<AddDDayPage />} />
               <Route path="/dday/add-bucket-list" element={<AddBucketListPage />} />
               <Route path="/dday/bucket-list/edit/:bucketListId" element={<EditBucketListPage />} />
               <Route path="/dday/bucket-list/:bucketListId" element={<BucketListDetailPage />} />
@@ -62,14 +65,22 @@ function App() {
               <Route path="/daily-quiz" element={<DailyQuizPage />} />
               <Route path="/daily-quiz/:quizId" element={<QuizDetailPage />} />
               <Route path="/create-quiz" element={<CreateQuizPage />} />
-              {/* Fallback route for main app */}
-              <Route path="*" element={<Navigate to="/" />} />
             </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+          </Route>
+          <Route path="/" element={<Navigate to={user ? "/home" : "/signin"} />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
 
-export default App;
+function Root() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
+
+export default Root;
