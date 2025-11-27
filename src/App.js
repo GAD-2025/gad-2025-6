@@ -28,7 +28,7 @@ import MainLayout from './components/layout/MainLayout';
 
 
 import PrivateRoute from './components/common/PrivateRoute';
-import useAuth from './hooks/useAuth';
+import { useAuth } from './context/AuthContext';
 
 
 function App() {

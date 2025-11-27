@@ -1,6 +1,8 @@
+const apiUrl = process.env.REACT_APP_API_URL;
+
 // A mock function to simulate a login API call
 export const login = async (email, password) => {
-  const response = await fetch('/api/auth/login', {
+  const response = await fetch(`${apiUrl}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -12,7 +14,7 @@ export const login = async (email, password) => {
 
 // A mock function to simulate a signup API call
 export const signup = async (name, email, password) => {
-  const response = await fetch('/api/auth/signup', {
+  const response = await fetch(`${apiUrl}/api/auth/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
