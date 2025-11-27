@@ -113,7 +113,7 @@ const CreateQuizPage = () => {
               </div>
             </div>
           </div>
-          <div data-property-1="Variant3" style={{width: 350, paddingLeft: 74, paddingRight: 74, paddingTop: 18, paddingBottom: 18, background: sendButtonBackgroundColor, overflow: 'hidden', borderRadius: 28, justifyContent: 'center', alignItems: 'center', gap: 10, display: 'inline-flex'}}>
+          <div data-property-1="button.default" style={{width: 350, paddingLeft: 74, paddingRight: 74, paddingTop: 18, paddingBottom: 18, background: sendButtonBackgroundColor, overflow: 'hidden', borderRadius: '28px !important', justifyContent: 'center', alignItems: 'center', gap: 10, display: 'inline-flex'}}>
             <div style={{textAlign: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column', color: '#F1F1F1', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>Send</div>
           </div>
         </div>

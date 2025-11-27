@@ -195,7 +195,7 @@ const SaveButton = styled.div`
   padding-bottom: 18px;
   background: ${(props) => (props.active ? '#84AF25' : '#D5D5D5')};
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: 28px !important;
   justify-content: center;
   align-items: center;
   gap: 10px;
@@ -285,7 +285,7 @@ function AddBucketListPage() {
                   <CalendarIcon />
                 </InputField>
               </InputGroup>
-              <SaveButton active={isSaveButtonActive}>
+              <SaveButton data-property-1="button.default" active={isSaveButtonActive}>
                 <SaveButtonText>Save</SaveButtonText>
               </SaveButton>
             </FormSection>

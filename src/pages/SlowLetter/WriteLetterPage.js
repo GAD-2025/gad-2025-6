@@ -47,36 +47,36 @@ const WriteLetterPage = () => {
               <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24, display: 'flex'}}>
                 <div style={{width: 350, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'flex'}}>
                   <div style={{alignSelf: 'stretch', color: '#A17E66', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Title</div>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={handleTitleChange}
-                    placeholder="Title of your letter"
-                    style={{
-                      width: 350,
-                      height: 56,
-                      padding: '18px',
-                      background: 'white',
-                      overflow: 'hidden',
-                      borderRadius: 20,
-                      outline: '1px #EAEAEA solid',
-                      border: 'none',
-                      fontSize: 16,
-                      fontFamily: 'Pretendard',
-                      fontWeight: '700',
-                      boxSizing: 'border-box',
-                      color: '#2C2C2C'
-                    }}
-                  />
+                  <div data-property-1="input.default.eye" style={{width: 350, height: 56, padding: 18, background: 'white', overflow: 'hidden', borderRadius: 20, outline: '1px #EAEAEA solid', outlineOffset: '-1px', justifyContent: 'center', alignItems: 'center', gap: 10, display: 'inline-flex'}}>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={handleTitleChange}
+                      placeholder="Title of your letter"
+                      style={{
+                        flex: '1 1 0',
+                        alignSelf: 'stretch',
+                        color: '#DBDBDB',
+                        fontSize: 16,
+                        fontFamily: 'Pretendard',
+                        fontWeight: '400',
+                        wordWrap: 'break-word',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
                 </div>
                 <div style={{width: 350, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'flex'}}>
-                  <div style={{alignSelf: 'stretch', color: '#A17E66', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Content</div>
-                  <div style={{
+                  <div style={{alignSelf: 'stretch', color: '#A17E66', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Context</div>
+                  <div data-property-1="Input.Content.Default" style={{
                     width: 350,
                     paddingTop: 18,
                     paddingBottom: 23,
-                    paddingLeft: 18,
-                    paddingRight: 18,
+                    paddingLeft: 24,
+                    paddingRight: 24,
                     background: 'white',
                     overflow: 'hidden',
                     borderRadius: 20,
@@ -88,16 +88,16 @@ const WriteLetterPage = () => {
                     <textarea
                       value={content}
                       onChange={handleContentChange}
-                      placeholder="Enter your letter content here"
+                      placeholder="Type your message"
                       maxLength={1000}
                       style={{
                         width: '100%',
                         flexGrow: 1,
-                        minHeight: '200px',
-                        color: '#2C2C2C',
+                        minHeight: '236px',
+                        color: '#DBDBDB',
                         fontSize: 16,
                         fontFamily: 'Pretendard',
-                        fontWeight: '700',
+                        fontWeight: '400',
                         wordWrap: 'break-word',
                         border: 'none',
                         outline: 'none',
@@ -113,7 +113,7 @@ const WriteLetterPage = () => {
               </div>
             </div>
           </div>
-          <div data-property-1="Variant3" style={{width: 350, paddingLeft: 74, paddingRight: 74, paddingTop: 18, paddingBottom: 18, background: sendButtonBackgroundColor, overflow: 'hidden', borderRadius: 28, justifyContent: 'center', alignItems: 'center', gap: 10, display: 'inline-flex'}}>
+          <div data-property-1="button.default" style={{width: 350, paddingLeft: 74, paddingRight: 74, paddingTop: 18, paddingBottom: 18, background: sendButtonBackgroundColor, overflow: 'hidden', borderRadius: '28px !important', justifyContent: 'center', alignItems: 'center', gap: 10, display: 'inline-flex'}}>
             <div style={{textAlign: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column', color: '#F1F1F1', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>Send</div>
           </div>
         </div>
