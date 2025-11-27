@@ -56,15 +56,12 @@ const DDayPage = () => {
           </BatteryIcon>
         </StatusBar>
       </TopNav>
+      <Title>D-day & Bucket List</Title>
+      <TabWrapper>
+        <Tab active={activeTab === 'dday'} onClick={() => setActiveTab('dday')}>D-day</Tab>
+        <Tab active={activeTab === 'bucketList'} onClick={() => setActiveTab('bucketList')}>Bucket List</Tab>
+      </TabWrapper>
       <ContentWrapper>
-        <Header>
-          <Title>D-day & Bucket List</Title>
-          <TabWrapper>
-            <Tab active={activeTab === 'dday'} onClick={() => setActiveTab('dday')}>D-day</Tab>
-            <Tab active={activeTab === 'bucketList'} onClick={() => setActiveTab('bucketList')}>Bucket List</Tab>
-          </TabWrapper>
-        </Header>
-
         {activeTab === 'dday' ? (
           <>
             <DDayCard>
@@ -186,15 +183,13 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-`;
-
-const Header = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  padding-top: 150px;
 `;
 
 const Title = styled.div`
+  position: absolute;
+  left: 20px;
+  top: 60px;
   color: black;
   font-size: 24px;
   font-family: 'Pangolin', sans-serif;
@@ -202,13 +197,16 @@ const Title = styled.div`
 `;
 
 const TabWrapper = styled.div`
+  position: absolute;
+  left: 52px;
+  top: 95px;
   display: flex;
   gap: 72px;
 `;
 
 const Tab = styled.div`
   width: 106px;
-  padding: 14px 37px;
+  padding: 14px 0;
   text-align: center;
   font-size: 16px;
   font-family: 'Pretendard', sans-serif;

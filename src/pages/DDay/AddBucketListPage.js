@@ -145,6 +145,7 @@ const InputLabel = styled.div`
   font-family: Pangolin;
   font-weight: 400;
   word-wrap: break-word;
+  text-align: left;
 `;
 
 const InputField = styled.div`

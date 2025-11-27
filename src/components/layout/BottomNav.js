@@ -45,8 +45,19 @@ const BottomNav = () => {
         boxSizing: 'border-box',
     }}>
         {navItems.map(item => {
-          const isActive = location.pathname === item.to;
-          const color = isActive ? '#F8DA72' : '#33363F';
+          const isActive = item.to === '/'
+            ? location.pathname === item.to
+            : location.pathname.startsWith(item.to);
+          let color;
+          if (item.label === 'Letter') {
+            color = isActive ? '#A17E66' : '#2A343D';
+          } else if (item.label === 'D-day') {
+            color = isActive ? '#9CB06E' : '#2A343D';
+          } else if (item.label === 'My') {
+            color = isActive ? '#A17E66' : '#33363F';
+          } else {
+            color = isActive ? (item.label === 'Home' ? '#D58699' : '#F8DA72') : '#33363F';
+          }
           const Icon = item.icon;
 
           return (
@@ -57,7 +68,7 @@ const BottomNav = () => {
           );
         })}
       <div style={{width: 390, height: 36, left: 0, top: 52, position: 'absolute', pointerEvents: 'none'}}>
-        <div style={{width: 134, height: 5, left: 128, top: 23, position: 'absolute', background: 'black', borderRadius: 100}} />
+        <div style={{width: 134, height: 5, left: 128, top: 23, position: 'absolute', background: 'white', borderRadius: 100}} />
       </div>
     </div>
   );

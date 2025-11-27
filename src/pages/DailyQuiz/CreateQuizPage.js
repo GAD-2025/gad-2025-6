@@ -44,7 +44,7 @@ const CreateQuizPage = () => {
               </div>
             </div>
             <div style={{width: 350, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24, display: 'flex'}}>
-              <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-end', gap: 24, display: 'flex'}}>
+              <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24, display: 'flex'}}>
                 <div style={{width: 350, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'flex'}}>
                   <div style={{alignSelf: 'stretch', color: '#FFC90F', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Today’s Quiz?</div>
                   <input
@@ -75,8 +75,8 @@ const CreateQuizPage = () => {
                     width: 350,
                     paddingTop: 18,
                     paddingBottom: 23,
-                    paddingLeft: 24,
-                    paddingRight: 24,
+                    paddingLeft: 18,
+                    paddingRight: 18,
                     background: 'white',
                     overflow: 'hidden',
                     borderRadius: 20,
@@ -109,18 +109,6 @@ const CreateQuizPage = () => {
                     />
                     <div style={{width: '100%', textAlign: 'right', color: '#DBDBDB', fontSize: 14, fontFamily: 'Pretendard', fontWeight: '400', wordWrap: 'break-word'}}>{hint.length}/1000</div>
                   </div>
-                </div>
-              </div>
-              <div style={{height: 80, paddingLeft: 21, paddingRight: 21, paddingTop: 11, paddingBottom: 11, background: 'var(--Gray-1, #F3F4F6)', overflow: 'hidden', borderRadius: 5, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'inline-flex'}}>
-                <div style={{width: 38, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', gap: 2, display: 'inline-flex'}}>
-                  <div style={{alignSelf: 'stretch', height: 38, position: 'relative', overflow: 'hidden'}}>
-                    <div style={{width: 12.67, height: 3.17, left: 23.75, top: 6.33, position: 'absolute', background: '#9E9FAD'}} />
-                    <div style={{width: 3.17, height: 12.67, left: 28.50, top: 1.58, position: 'absolute', background: '#9E9FAD'}} />
-                    <div style={{width: 31.67, height: 31.67, left: 3.17, top: 3.17, position: 'absolute', background: '#9E9FAD'}} />
-                    <div style={{width: 26.92, height: 18.48, left: 7.92, top: 16.35, position: 'absolute', background: '#9E9FAD'}} />
-                    <div style={{width: 9.50, height: 9.50, left: 9.50, top: 9.50, position: 'absolute', background: '#9E9FAD'}} />
-                  </div>
-                  <div style={{alignSelf: 'stretch', textAlign: 'center', color: 'var(--Gray-4, #9E9FAD)', fontSize: 14, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>0/2</div>
                 </div>
               </div>
             </div>

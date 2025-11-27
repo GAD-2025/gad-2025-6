@@ -44,7 +44,7 @@ const WriteLetterPage = () => {
               </div>
             </div>
             <div style={{width: 350, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24, display: 'flex'}}>
-              <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-end', gap: 24, display: 'flex'}}>
+              <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24, display: 'flex'}}>
                 <div style={{width: 350, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'flex'}}>
                   <div style={{alignSelf: 'stretch', color: '#A17E66', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Title</div>
                   <input
@@ -75,8 +75,8 @@ const WriteLetterPage = () => {
                     width: 350,
                     paddingTop: 18,
                     paddingBottom: 23,
-                    paddingLeft: 24,
-                    paddingRight: 24,
+                    paddingLeft: 18,
+                    paddingRight: 18,
                     background: 'white',
                     overflow: 'hidden',
                     borderRadius: 20,
