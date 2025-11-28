@@ -1,6 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Function to format date string
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+};
+
 const QuizCard = ({ quiz, isHighlighted, obscureTitle }) => {
   const navigate = useNavigate();
 
@@ -16,7 +23,7 @@ const QuizCard = ({ quiz, isHighlighted, obscureTitle }) => {
     navigate(`/daily-quiz/${quiz.id}`, { state: { quiz } });
   };
 
-  const displayTitle = obscureTitle ? quiz.title.replace(/./g, '█') : quiz.title;
+  const displayQuestion = obscureTitle && quiz.question ? quiz.question.replace(/./g, '█') : quiz.question;
 
   return (
     <div
@@ -37,12 +44,9 @@ const QuizCard = ({ quiz, isHighlighted, obscureTitle }) => {
         cursor: 'pointer'
       }}
     >
-      <div style={{width: 138, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-end', gap: 60, display: 'inline-flex'}}>
-        <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 16, display: 'flex'}}>
-          <div style={{alignSelf: 'stretch', color: '#444444', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{displayTitle}</div>
-          <div style={{alignSelf: 'stretch', color: '#979797', fontSize: 14, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.description}</div>
-        </div>
-        <div style={{alignSelf: 'stretch', textAlign: 'right', color: '#979797', fontSize: 10, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.date}</div>
+      <div style={{width: 138, height: 120, flexDirection: 'column', justifyContent: 'space-between', display: 'inline-flex'}}>
+        <div style={{alignSelf: 'stretch', color: '#444444', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{displayQuestion}</div>
+        <div style={{alignSelf: 'stretch', textAlign: 'right', color: '#979797', fontSize: 10, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{formatDate(quiz.created_at)}</div>
       </div>
     </div>
   );

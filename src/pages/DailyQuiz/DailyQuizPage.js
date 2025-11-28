@@ -1,14 +1,29 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
 import ReceivedQuizList from './ReceivedQuizList';
 import CreatedQuizList from './CreatedQuizList';
-import { quizData, createdQuizData } from '../../data/quizData';
+import { getQuizzes } from '../../api/quiz'; // Import real API
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import { quizData } from '../../data/quizData'; // Keep mock data for received quizzes for now
 
 const DailyQuizPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('received');
   const [showOnlyNew, setShowOnlyNew] = useState(false);
+  const [createdQuizzes, setCreatedQuizzes] = useState([]);
+
+  useEffect(() => {
+    if (user && user.id) {
+      const fetchQuizzes = async () => {
+        const quizzes = await getQuizzes(user.id);
+        setCreatedQuizzes(quizzes);
+      };
+      // Fetch created quizzes when the component mounts or user changes
+      fetchQuizzes();
+    }
+  }, [user]);
 
   const hasNewQuiz = useMemo(() => quizData.some(quiz => quiz.isNew), []);
 
@@ -26,18 +41,13 @@ const DailyQuizPage = () => {
     setShowOnlyNew(true);
   };
 
-  const displayedQuizzes = useMemo(() => {
-    if (activeTab === 'received') {
-      if (showOnlyNew) {
-        const firstNewQuiz = quizData.find(q => q.isNew);
-        return firstNewQuiz ? [firstNewQuiz] : [];
-      } else {
-        return quizData;
-      }
-    } else {
-      return createdQuizData;
+  const displayedReceivedQuizzes = useMemo(() => {
+    if (showOnlyNew) {
+      const firstNewQuiz = quizData.find(q => q.isNew);
+      return firstNewQuiz ? [firstNewQuiz] : [];
     }
-  }, [activeTab, showOnlyNew, quizData, createdQuizData]);
+    return quizData;
+  }, [showOnlyNew]);
 
   return (
     <div style={{height: 844, position: 'relative', background: 'white', display: 'flex', flexDirection: 'column'}}>
@@ -84,9 +94,9 @@ const DailyQuizPage = () => {
 
       {/* Quiz Card List */}
       {activeTab === 'received' ? (
-        <ReceivedQuizList quizData={displayedQuizzes} obscureTitles={showOnlyNew} />
+        <ReceivedQuizList quizData={displayedReceivedQuizzes} obscureTitles={showOnlyNew} />
       ) : (
-        <CreatedQuizList quizData={createdQuizData} />
+        <CreatedQuizList quizData={createdQuizzes} />
       )}
 
       {/* Floating Action Button */}

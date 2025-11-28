@@ -1,37 +1,44 @@
-// A mock function to simulate fetching letters
-export const getLetters = async () => {
-  // Simulate a network request
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
-  // In a real application, you would fetch this data from your backend
-  return [
-    {
-      id: 1,
-      title: 'Letter to my future self',
-      content: 'Dear future me, I hope you are doing well...',
-      sendDate: '2025-12-31',
-    },
-    {
-      id: 2,
-      title: 'A letter to a friend',
-      content: 'Hey John, I wanted to catch up with you...',
-      sendDate: '2026-01-15',
-    },
-  ];
+/**
+ * 사용자의 모든 편지를 가져옵니다.
+ * @param {number} userId - 편지를 조회할 사용자의 ID
+ * @returns {Promise<Array>} 사용자의 편지 목록
+ */
+export const getLetters = async (userId) => {
+  if (!userId) {
+    console.error("getLetters: userId is required");
+    return [];
+  }
+  const response = await fetch(`${apiUrl}/api/letters/user/${userId}`);
+  const data = await response.json();
+  if (data.success) {
+    return data.letters;
+  } else {
+    console.error("Failed to fetch letters:", data.message);
+    return [];
+  }
 };
 
-// A mock function to simulate sending a letter
-export const sendLetter = async (letter) => {
-  console.log('Sending letter:', letter);
-  // Simulate a network request
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // In a real application, you would send the new letter to your backend
-  return {
-    success: true,
-    letter: {
-      id: Math.floor(Math.random() * 1000) + 3, // Generate a random ID
-      ...letter,
+/**
+ * 새로운 편지를 서버에 전송합니다.
+ * @param {object} letterData - { content: "편지 내용" } 형태의 객체
+ * @param {number} userId - 편지를 보내는 사용자의 ID
+ * @returns {Promise<object>} API 응답 객체
+ */
+export const sendLetter = async (letterData, userId) => {
+  if (!userId) {
+    return { success: false, message: "User is not logged in." };
+  }
+  const response = await fetch(`${apiUrl}/api/letters`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  };
+    body: JSON.stringify({
+      content: letterData.content,
+      userId: userId // 중요: 보안에 취약하므로 추후 인증 토큰 방식으로 변경해야 합니다.
+    }),
+  });
+  return response.json();
 };

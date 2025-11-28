@@ -1,30 +1,57 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createQuiz } from '../../api/quiz'; // Import the createQuiz API
+import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
 
 const CreateQuizPage = () => {
   const navigate = useNavigate();
-  const [title, setTitle] = useState('');
-  const [hint, setHint] = useState('');
+  const { user } = useAuth(); // Get user data from AuthContext
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
+  const handleQuestionChange = (e) => {
+    setQuestion(e.target.value);
   };
 
-  const handleHintChange = (e) => {
-    setHint(e.target.value);
+  const handleAnswerChange = (e) => {
+    setAnswer(e.target.value);
   };
 
-  const isSendButtonActive = title.trim() !== '' || hint.trim() !== '';
+  const handleCreateQuiz = async () => {
+    if (!user || !user.id) {
+      alert("Please log in to create a quiz.");
+      return;
+    }
+    if (question.trim() === '' || answer.trim() === '') {
+      alert("Question and answer cannot be empty.");
+      return;
+    }
+
+    try {
+      const response = await createQuiz({ question, answer }, user.id);
+      if (response.success) {
+        alert("Quiz created successfully!");
+        navigate('/daily-quiz'); // Navigate to the daily quiz list page
+      } else {
+        alert(`Failed to create quiz: ${response.message}`);
+      }
+    } catch (error) {
+      console.error("Error creating quiz:", error);
+      alert("An error occurred while creating the quiz.");
+    }
+  };
+
+  const isSendButtonActive = question.trim() !== '' && answer.trim() !== '';
   const sendButtonBackgroundColor = isSendButtonActive ? '#F8DA72' : '#D5D5D5';
 
   return (
     <div style={{width: 390, height: 844, background: 'white', overflow: 'hidden', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'inline-flex'}}>
       <div style={{flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex'}}>
-        <div style={{width: 390, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', gap: 107, display: 'flex'}}>
+        <div style={{width: 390, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', gap: 32, display: 'flex'}}>
           <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', gap: 16, display: 'flex'}}>
             <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex'}}>
               {/* Status Bar */}
@@ -49,9 +76,9 @@ const CreateQuizPage = () => {
                   <div style={{alignSelf: 'stretch', color: '#FFC90F', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Today’s Quiz?</div>
                   <input
                     type="text"
-                    value={title}
-                    onChange={handleTitleChange}
-                    placeholder="Title of your quiz"
+                    value={question}
+                    onChange={handleQuestionChange}
+                    placeholder="Enter your question"
                     style={{
                       width: 350,
                       height: 56,
@@ -70,7 +97,7 @@ const CreateQuizPage = () => {
                   />
                 </div>
                 <div style={{width: 350, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'flex'}}>
-                  <div style={{alignSelf: 'stretch', color: '#FFC90F', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Give your hint</div>
+                  <div style={{alignSelf: 'stretch', color: '#FFC90F', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', wordWrap: 'break-word'}}>Give your hint (Answer)</div>
                   <div style={{
                     width: 350,
                     paddingTop: 18,
@@ -86,9 +113,9 @@ const CreateQuizPage = () => {
                     flexDirection: 'column',
                   }}>
                     <textarea
-                      value={hint}
-                      onChange={handleHintChange}
-                      placeholder="Enter your hint here"
+                      value={answer}
+                      onChange={handleAnswerChange}
+                      placeholder="Enter the answer"
                       maxLength={1000}
                       style={{
                         width: '100%',
@@ -107,13 +134,13 @@ const CreateQuizPage = () => {
                         overflowY: 'auto',
                       }}
                     />
-                    <div style={{width: '100%', textAlign: 'right', color: '#DBDBDB', fontSize: 14, fontFamily: 'Pretendard', fontWeight: '400', wordWrap: 'break-word'}}>{hint.length}/1000</div>
+                    <div style={{width: '100%', textAlign: 'right', color: '#DBDBDB', fontSize: 14, fontFamily: 'Pretendard', fontWeight: '400', wordWrap: 'break-word'}}>{answer.length}/1000</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div data-property-1="button.default" style={{width: 350, paddingLeft: 74, paddingRight: 74, paddingTop: 18, paddingBottom: 18, background: sendButtonBackgroundColor, overflow: 'hidden', borderRadius: '28px !important', justifyContent: 'center', alignItems: 'center', gap: 10, display: 'inline-flex'}}>
+          <div data-property-1="button.default" onClick={handleCreateQuiz} style={{width: 350, paddingLeft: 74, paddingRight: 74, paddingTop: 18, paddingBottom: 18, background: sendButtonBackgroundColor, overflow: 'hidden', borderRadius: '28px !important', justifyContent: 'center', alignItems: 'center', gap: 10, display: 'inline-flex', cursor: isSendButtonActive ? 'pointer' : 'not-allowed'}}>
             <div style={{textAlign: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column', color: '#F1F1F1', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>Send</div>
           </div>
         </div>

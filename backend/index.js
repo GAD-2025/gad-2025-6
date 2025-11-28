@@ -159,6 +159,98 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// 느린 편지 생성 API 엔드포인트
+app.post('/api/letters', async (req, res) => {
+  const { content, userId } = req.body;
+
+  // 중요: 실제 프로덕션 환경에서는 요청 본문(body)에서 userId를 직접 받는 것은 매우 위험합니다.
+  // 이 userId는 인증 토큰(JWT 등)을 통해 서버에서 직접 추출해야 안전합니다.
+  // 현재 구조상 임시로 이 방법을 사용합니다.
+  if (!content || !userId) {
+    return res.status(400).json({ success: false, message: 'Content and userId are required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute(
+      'INSERT INTO slow_letters (user_id, content) VALUES (?, ?)',
+      [userId, content]
+    );
+    connection.release();
+    res.status(201).json({ success: true, message: 'Letter saved successfully.', letterId: result.insertId });
+  } catch (error) {
+    console.error('Error saving letter:', error);
+    res.status(500).json({ success: false, message: 'Server error while saving letter.' });
+  }
+});
+
+// 특정 사용자의 모든 느린 편지 조회 API 엔드포인트
+app.get('/api/letters/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ success: false, message: 'User ID is required.' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+        const [letters] = await connection.execute(
+            'SELECT * FROM slow_letters WHERE user_id = ? ORDER BY created_at DESC',
+            [userId]
+        );
+        connection.release();
+        res.status(200).json({ success: true, letters });
+    } catch (error) {
+        console.error('Error fetching letters:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching letters.' });
+    }
+});
+
+// 퀴즈 생성 API 엔드포인트
+app.post('/api/quizzes', async (req, res) => {
+  const { question, answer, creatorId } = req.body;
+
+  // 중요: creatorId는 보안을 위해 실제로는 인증 토큰에서 추출해야 합니다.
+  if (!question || !answer || !creatorId) {
+    return res.status(400).json({ success: false, message: 'Question, answer, and creatorId are required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute(
+      'INSERT INTO quizzes (creator_id, question, answer) VALUES (?, ?, ?)',
+      [creatorId, question, answer]
+    );
+    connection.release();
+    res.status(201).json({ success: true, message: 'Quiz created successfully.', quizId: result.insertId });
+  } catch (error) {
+    console.error('Error creating quiz:', error);
+    res.status(500).json({ success: false, message: 'Server error while creating quiz.' });
+  }
+});
+
+// 특정 사용자가 만든 퀴즈 조회 API 엔드포인트
+app.get('/api/quizzes/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ success: false, message: 'User ID is required.' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+        const [quizzes] = await connection.execute(
+            'SELECT * FROM quizzes WHERE creator_id = ? ORDER BY created_at DESC',
+            [userId]
+        );
+        connection.release();
+        res.status(200).json({ success: true, quizzes });
+    } catch (error) {
+        console.error('Error fetching quizzes:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching quizzes.' });
+    }
+});
+
 app.listen(port, () => {
   console.log(`Backend server listening at http://localhost:${port}`);
   console.log('Access the DB test endpoint at http://localhost:3001/api/test-db');
