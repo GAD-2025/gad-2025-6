@@ -42,6 +42,16 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
+// Helper function to generate a random alphanumeric code
+const generateRandomCode = (length) => {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
 // 회원가입 API 엔드포인트
 app.post('/api/auth/signup', async (req, res) => {
   const { name, email, password } = req.body;
@@ -50,14 +60,28 @@ app.post('/api/auth/signup', async (req, res) => {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
+  let connection;
   try {
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
 
     // 이메일 중복 확인
     const [existingUsers] = await connection.execute('SELECT * FROM users WHERE email = ?', [email]);
     if (existingUsers.length > 0) {
+      await connection.rollback();
       connection.release();
       return res.status(409).json({ success: false, message: 'User with this email already exists.' });
+    }
+
+    // 고유한 사용자 코드 생성
+    let userCode;
+    let isCodeUnique = false;
+    while (!isCodeUnique) {
+      userCode = generateRandomCode(8);
+      const [existingCodes] = await connection.execute('SELECT * FROM users WHERE user_code = ?', [userCode]);
+      if (existingCodes.length === 0) {
+        isCodeUnique = true;
+      }
     }
 
     // 비밀번호 해싱
@@ -65,13 +89,24 @@ app.post('/api/auth/signup', async (req, res) => {
 
     // 사용자 정보 저장
     const [result] = await connection.execute(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword]
+      'INSERT INTO users (name, email, password, user_code) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, userCode]
     );
-
+    
+    await connection.commit();
     connection.release();
-    res.status(201).json({ success: true, message: 'User created successfully.', userId: result.insertId });
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'User created successfully.', 
+      userId: result.insertId,
+      user_code: userCode // Include user_code in the response
+    });
   } catch (error) {
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
     console.error('Signup error:', error);
     res.status(500).json({ success: false, message: 'Server error during signup.' });
   }
@@ -113,7 +148,8 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        user_code: user.user_code // Include user_code in the response
       }
     });
 

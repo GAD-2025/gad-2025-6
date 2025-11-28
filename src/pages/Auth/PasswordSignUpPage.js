@@ -1,24 +1,49 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { signup, login as apiLogin } from '../../api/auth'; // Import signup and login APIs
+import { useAuth } from '../../context/AuthContext'; // Import useAuth hook from AuthContext
 
 const PasswordSignUpPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth(); // Get login function from AuthContext
   const { name, email } = location.state || {};
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [error, setError] = useState('');
 
   const isButtonEnabled = password.length > 0 && passwordConfirmation.length > 0;
 
-  const handleSignUpClick = () => {
-    if (isButtonEnabled) {
-      if (password !== passwordConfirmation) {
-        alert("Passwords do not match.");
+  const handleSignUpClick = async () => {
+    if (!isButtonEnabled) return;
+
+    if (password !== passwordConfirmation) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setError('');
+
+    try {
+      const signupResponse = await signup(name, email, password);
+      if (!signupResponse.success) {
+        setError(signupResponse.message || "Sign up failed. Please try again.");
         return;
       }
-      // Logic to handle final sign up
-      navigate('/signup/invitation', { state: { name, email, password } });
+
+      // Automatically log in the user after successful signup
+      const loginResponse = await apiLogin(email, password);
+      if (loginResponse.success) {
+        login(loginResponse.user); // Update auth context
+        navigate('/'); // Navigate to home page
+      } else {
+        setError(loginResponse.message || "Login failed after sign up.");
+        // If auto-login fails, redirect to sign-in page so they can log in manually
+        navigate('/signin');
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Signup error:", err);
     }
   };
 
@@ -42,16 +67,26 @@ const PasswordSignUpPage = () => {
           value={passwordConfirmation}
           onChange={(e) => setPasswordConfirmation(e.target.value)}
         />
+        {error && <ErrorMessage>{error}</ErrorMessage>}
       </InputContainer>
 
       <SignUpButton onClick={handleSignUpClick} disabled={!isButtonEnabled}>
-        Sign up
+        Complete
       </SignUpButton>
     </PageWrapper>
   );
 };
 
+
 export default PasswordSignUpPage;
+
+const ErrorMessage = styled.p`
+  font-size: 14px;
+  color: red;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  font-family: 'Pretendard', sans-serif;
+`;
 
 const PageWrapper = styled.div`
   display: flex;

@@ -19,7 +19,7 @@ const SignInPage = () => {
       const result = await apiLogin(email, password);
       if (result.success) {
         login(result.user); // Update context state
-        navigate('/my-page'); // Navigate to my page on successful login
+        navigate('/'); // Navigate to home page on successful login
       } else {
         alert(`Login failed: ${result.message}`);
       }
