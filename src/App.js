@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'; // Re-added Link
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import './App.css';
 import { AuthProvider } from './context/AuthContext';
 import OnboardingPage from './pages/Onboarding/OnboardingPage';
@@ -36,41 +36,39 @@ function App() {
 
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          {/* Authentication & Onboarding Routes (without MainLayout) */}
-          <Route path="/signin" element={<SignInPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/signup/password" element={<PasswordSignUpPage />} />
-          <Route path="/signup/invitation" element={<InvitationCodePage />} />
-          <Route path="/signup/waiting" element={<WaitingForPartnerPage />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
+      <Routes>
+        {/* Authentication & Onboarding Routes (without MainLayout) */}
+        <Route path="/signin" element={<SignInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/signup/password" element={<PasswordSignUpPage />} />
+        <Route path="/signup/invitation" element={<InvitationCodePage />} />
+        <Route path="/signup/waiting" element={<WaitingForPartnerPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
 
-          {/* Main Application Routes (with MainLayout) */}
-          <Route element={<PrivateRoute />}>
-            <Route element={<MainLayout />}>
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/dday" element={<DDayPage />} />
-              <Route path="/dday/add" element={<AddDDayPage />} />
-              <Route path="/dday/add-bucket-list" element={<AddBucketListPage />} />
-              <Route path="/dday/bucket-list/edit/:bucketListId" element={<EditBucketListPage />} />
-              <Route path="/dday/bucket-list/:bucketListId" element={<BucketListDetailPage />} />
-              <Route path="/dday/:ddayId" element={<DDayDetailPage />} />
-              <Route path="/dday/edit/:ddayId" element={<EditDDayPage />} />
-              <Route path="/slow-letter" element={<SlowLetterPage />} />
-              <Route path="/slow-letter/write" element={<WriteLetterPage />} />
-              <Route path="/slow-letter/:letterId" element={<SlowLetterDetailPage />} />
-              <Route path="/my-page" element={<MyPage />} />
-              <Route path="/my-page/settings" element={<SettingsPage />} />
-              <Route path="/daily-quiz" element={<DailyQuizPage />} />
-              <Route path="/daily-quiz/:quizId" element={<QuizDetailPage />} />
-              <Route path="/create-quiz" element={<CreateQuizPage />} />
-            </Route>
+        {/* Main Application Routes (with MainLayout) */}
+        <Route element={<PrivateRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/dday" element={<DDayPage />} />
+            <Route path="/dday/add" element={<AddDDayPage />} />
+            <Route path="/dday/add-bucket-list" element={<AddBucketListPage />} />
+            <Route path="/dday/bucket-list/edit/:bucketListId" element={<EditBucketListPage />} />
+            <Route path="/dday/bucket-list/:bucketListId" element={<BucketListDetailPage />} />
+            <Route path="/dday/:ddayId" element={<DDayDetailPage />} />
+            <Route path="/dday/edit/:ddayId" element={<EditDDayPage />} />
+            <Route path="/slow-letter" element={<SlowLetterPage />} />
+            <Route path="/slow-letter/write" element={<WriteLetterPage />} />
+            <Route path="/slow-letter/:letterId" element={<SlowLetterDetailPage />} />
+            <Route path="/my-page" element={<MyPage />} />
+            <Route path="/my-page/settings" element={<SettingsPage />} />
+            <Route path="/daily-quiz" element={<DailyQuizPage />} />
+            <Route path="/daily-quiz/:quizId" element={<QuizDetailPage />} />
+            <Route path="/create-quiz" element={<CreateQuizPage />} />
           </Route>
-          <Route path="/" element={<Navigate to={user ? "/home" : "/signin"} />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
+        </Route>
+        <Route path="/" element={<Navigate to={user ? "/home" : "/signin"} />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { ReactComponent as DDayIcon } from '../../assets/icons/Component 43.svg'
 import { ReactComponent as MyIcon } from '../../assets/icons/My.svg';
 
 const navItems = [
-  { to: '/', icon: HomeIcon, label: 'Home' },
+  { to: '/home', icon: HomeIcon, label: 'Home' },
   { to: '/slow-letter', icon: LetterIcon, label: 'Letter' },
   { to: '/daily-quiz', icon: QuizIcon, label: 'Quiz' },
   { to: '/dday', icon: DDayIcon, label: 'D-day' },
