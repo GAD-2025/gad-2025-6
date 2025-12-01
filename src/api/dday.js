@@ -1,40 +1,31 @@
-// A mock function to simulate fetching D-Day events
-export const getDDayEvents = async () => {
-  // Simulate a network request
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+const API_URL = '/api';
 
-  // In a real application, you would fetch this data from your backend
-  return [
-    {
-      id: 1,
-      title: 'London trip',
-      date: '2025-12-25',
-    },
-    {
-      id: 2,
-      title: 'Our Anniversary',
-      date: '2026-03-21',
-    },
-    {
-      id: 3,
-      title: 'Next Visit to Paris',
-      date: '2026-03-21',
-    },
-  ];
+export const getDdaysByUserId = async (userId) => {
+    const response = await fetch(`${API_URL}/dday/user/${userId}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch D-Day events');
+    }
+    return response.json();
 };
 
-// A mock function to simulate adding a D-Day event
-export const addDDayEvent = async (event) => {
-  console.log('Adding D-Day event:', event);
-  // Simulate a network request
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+export const getDdayById = async (id) => {
+    const response = await fetch(`${API_URL}/dday/${id}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch D-Day event');
+    }
+    return response.json();
+};
 
-  // In a real application, you would send the new event to your backend
-  return {
-    success: true,
-    event: {
-      id: Math.floor(Math.random() * 1000) + 4, // Generate a random ID
-      ...event,
-    },
-  };
+export const createDday = async (ddayData) => {
+    const response = await fetch(`${API_URL}/dday`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ddayData),
+    });
+    if (!response.ok) {
+        throw new Error('Failed to create D-Day event');
+    }
+    return response.json();
 };

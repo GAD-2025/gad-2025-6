@@ -1,16 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/layout/BottomNav';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
-import { bucketListData } from '../../data/bucketListData';
-import { ddayData } from '../../data/ddayData';
+import { getDdaysByUserId } from '../../api/dday';
+import { getBucketListsByUserId } from '../../api/bucketlist';
 
 const DDayPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dday');
-  const [bucketList, setBucketList] = useState(bucketListData);
-  const [ddayList, setDdayList] = useState(ddayData);
+  const [bucketList, setBucketList] = useState([]);
+  const [ddayList, setDdayList] = useState([]);
+
+  useEffect(() => {
+    // TODO: Replace with actual user ID from auth context
+    const userId = 1;
+
+    const fetchData = async () => {
+      try {
+        if (activeTab === 'dday') {
+          const response = await getDdaysByUserId(userId);
+          if (response.success) {
+            setDdayList(response.dday);
+          }
+        } else if (activeTab === 'bucketList') {
+          const response = await getBucketListsByUserId(userId);
+          if (response.success) {
+            setBucketList(response.bucketlist);
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to fetch ${activeTab}:`, error);
+      }
+    };
+
+    fetchData();
+  }, [activeTab]);
 
   const handleAddButtonClick = () => {
     if (activeTab === 'dday') {
@@ -40,9 +65,19 @@ const DDayPage = () => {
   const calculateDday = (date) => {
     const today = new Date();
     const targetDate = new Date(date);
+    // Reset time components to 00:00:00 to compare dates only
+    today.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
     const diffTime = targetDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? `D-${diffDays}` : `D+${-diffDays}`;
+    
+    if (diffDays === 0) {
+        return 'D-Day';
+    } else if (diffDays > 0) {
+        return `D-${diffDays}`;
+    } else {
+        return `D+${-diffDays}`;
+    }
   };
 
   return (
@@ -88,10 +123,10 @@ const DDayPage = () => {
           <BucketListContainer>
             {bucketList.map((item) => (
               <BucketListItemWrapper key={item.id}>
-                <BucketListItemBar completed={item.completed} />
-                <BucketListItemContent completed={item.completed}>
+                <BucketListItemBar completed={item.is_completed} />
+                <BucketListItemContent completed={item.is_completed}>
                   <div onClick={(e) => { e.stopPropagation(); handleToggleComplete(item.id); }}>
-                    {item.completed ? (
+                    {item.is_completed ? (
                       <CompletedCheckbox>
                         <CheckedIcon viewBox="0 0 24 24">
                           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
@@ -101,8 +136,8 @@ const DDayPage = () => {
                       <EmptyCheckbox />
                     )}
                   </div>
-                  <BucketListItemText completed={item.completed} onClick={() => handleBucketListItemClick(item)}>
-                    {item.title}
+                  <BucketListItemText completed={item.is_completed} onClick={() => handleBucketListItemClick(item)}>
+                    {item.content}
                   </BucketListItemText>
                 </BucketListItemContent>
               </BucketListItemWrapper>

@@ -251,6 +251,179 @@ app.get('/api/quizzes/user/:userId', async (req, res) => {
     }
 });
 
+// D-Day API Endpoints
+
+// 특정 사용자의 모든 D-Day 조회
+app.get('/api/dday/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const connection = await pool.getConnection();
+        const [ddays] = await connection.execute('SELECT * FROM dday WHERE user_id = ?', [userId]);
+        connection.release();
+        res.json({ success: true, dday: ddays });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// 특정 D-Day 조회
+app.get('/api/dday/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const connection = await pool.getConnection();
+        const [dday] = await connection.execute('SELECT * FROM dday WHERE id = ?', [id]);
+        connection.release();
+        if (dday.length > 0) {
+            res.json({ success: true, dday: dday[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'D-Day not found.' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// D-Day 생성
+app.post('/api/dday', async (req, res) => {
+    const { userId, title, date, content } = req.body;
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.execute(
+            'INSERT INTO dday (user_id, title, date, content) VALUES (?, ?, ?, ?)',
+            [userId, title, date, content]
+        );
+        connection.release();
+        res.status(201).json({ success: true, message: 'D-Day created.', ddayId: result.insertId });
+    } catch (error) {
+        console.error('Error creating D-Day:', error); // Add this line for detailed logging
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// D-Day 수정
+app.put('/api/dday/:id', async (req, res) => {
+    const { id } = req.params;
+    const { title, date, content } = req.body;
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.execute(
+            'UPDATE dday SET title = ?, date = ?, content = ? WHERE id = ?',
+            [title, date, content, id]
+        );
+        connection.release();
+        if (result.affectedRows > 0) {
+            res.json({ success: true, message: 'D-Day updated.' });
+        } else {
+            res.status(404).json({ success: false, message: 'D-Day not found.' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// D-Day 삭제
+app.delete('/api/dday/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.execute('DELETE FROM dday WHERE id = ?', [id]);
+        connection.release();
+        if (result.affectedRows > 0) {
+            res.json({ success: true, message: 'D-Day deleted.' });
+        } else {
+            res.status(404).json({ success: false, message: 'D-Day not found.' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// Bucket List API Endpoints
+
+// 특정 사용자의 모든 Bucket List 조회
+app.get('/api/bucketlist/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const connection = await pool.getConnection();
+        const [bucketlist] = await connection.execute('SELECT * FROM bucket_list WHERE user_id = ?', [userId]);
+        connection.release();
+        res.json({ success: true, bucketlist });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// 특정 Bucket List 조회
+app.get('/api/bucketlist/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const connection = await pool.getConnection();
+        const [bucketlist] = await connection.execute('SELECT * FROM bucket_list WHERE id = ?', [id]);
+        connection.release();
+        if (bucketlist.length > 0) {
+            res.json({ success: true, bucketlist: bucketlist[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'Bucket List not found.' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// Bucket List 생성
+app.post('/api/bucketlist', async (req, res) => {
+    const { userId, content } = req.body;
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.execute(
+            'INSERT INTO bucket_list (user_id, content) VALUES (?, ?)',
+            [userId, content]
+        );
+        connection.release();
+        res.status(201).json({ success: true, message: 'Bucket List created.', bucketlistId: result.insertId });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// Bucket List 수정
+app.put('/api/bucketlist/:id', async (req, res) => {
+    const { id } = req.params;
+    const { content, isCompleted } = req.body;
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.execute(
+            'UPDATE bucket_list SET content = ?, is_completed = ? WHERE id = ?',
+            [content, isCompleted, id]
+        );
+        connection.release();
+        if (result.affectedRows > 0) {
+            res.json({ success: true, message: 'Bucket List updated.' });
+        } else {
+            res.status(404).json({ success: false, message: 'Bucket List not found.' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
+// Bucket List 삭제
+app.delete('/api/bucketlist/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.execute('DELETE FROM bucket_list WHERE id = ?', [id]);
+        connection.release();
+        if (result.affectedRows > 0) {
+            res.json({ success: true, message: 'Bucket List deleted.' });
+        } else {
+            res.status(404).json({ success: false, message: 'Bucket List not found.' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error.', error });
+    }
+});
+
 app.listen(port, () => {
   console.log(`Backend server listening at http://localhost:${port}`);
   console.log('Access the DB test endpoint at http://localhost:3001/api/test-db');
