@@ -1,119 +1,93 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
 const SignUpPage = () => {
-  const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+    const navigate = useNavigate();
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
 
-  const isButtonEnabled = name.length > 0 && email.length > 0;
+    const isButtonEnabled = name.length > 0 && email.length > 0;
 
-  const handleNextClick = () => {
-    if (isButtonEnabled) {
-      navigate('/signup/password', { state: { name, email } });
-    }
-  };
+    const handleNextClick = () => {
+        if (isButtonEnabled) {
+            navigate('/signup/password', { state: { name, email } });
+        }
+    };
 
-  return (
-    <PageWrapper>
-      <Header>Sign Up</Header>
-      <Subtitle>Welcome to TODAK!</Subtitle>
+    const handleBackClick = () => {
+        navigate('/login');
+    };
 
-      <InputContainer>
-        <InputLabel>Name</InputLabel>
-        <StyledInput
-          type="text"
-          placeholder="Enter your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <InputLabel>E-mail</InputLabel>
-        <StyledInput
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </InputContainer>
+    return (
+        <div style={{width: '100%', height: '100vh', background: 'white', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center'}}>
+            
+            {/* Top Bar & Header */}
+            <div style={{alignSelf: 'stretch', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                {/* Status Bar */}
+                <div data-back="False" data-call-in="False" data-notch="True" data-theme="Dark" data-wifi="True" style={{alignSelf: 'stretch', height: 44, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px'}}>
+                    <div style={{textAlign: 'center', color: 'var(--Light-Ink, black)', fontSize: 14, fontFamily: 'SF Pro Display', fontWeight: '600', lineHeight: '14px'}}>19:02</div>
+                    <div style={{display: 'flex', gap: 5, alignItems: 'center'}}> {/* Container for battery and wifi icons */}
+                        <div style={{width: 12.24, height: 8.83, background: 'var(--Light-Ink, black)'}} /> {/* Wifi icon */}
+                        <div style={{width: 18.08, height: 8.50, position: 'relative'}}> {/* Battery icon */}
+                            <div style={{width: 13.73, height: 5.88, position: 'absolute', left: 1.31, top: 1.31, background: 'var(--Light-Ink, black)'}} />
+                        </div>
+                    </div>
+                </div>
+                {/* Back button */}
+                <div data-property-1="TopBar.x" style={{alignSelf: 'stretch', height: 44, position: 'relative', overflow: 'hidden'}}>
+                    <div data-property-1="icon_arrow_left" style={{width: 24, height: 24, left: 20, top: 10.50, position: 'absolute', cursor: 'pointer'}} onClick={handleBackClick}>
+                        <div style={{width: 20, height: 13, left: 2, top: 5.50, position: 'absolute', background: 'var(--Grayscale-900, #1A1B1E)'}} />
+                    </div>
+                </div>
+            </div>
 
-      <NextButton onClick={handleNextClick} disabled={!isButtonEnabled}>
-        Next
-      </NextButton>
-    </PageWrapper>
-  );
+            {/* Main Content */}
+            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 48, paddingBottom: 100}}>
+                <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 16}}>
+                    <div style={{alignSelf: 'stretch', color: 'var(--Black, black)', fontSize: 24, fontFamily: 'Pretendard', fontWeight: '700'}}>Sign up</div>
+                    <div style={{alignSelf: 'stretch', color: 'var(--Gray-4, #9E9FAD)', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '700'}}>Welcome to TODAK!</div>
+                </div>
+                <div style={{alignSelf: 'stretch', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24}}>
+                    <div style={{width: 350, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8}}>
+                        <div style={{alignSelf: 'stretch', color: '#D58699', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', paddingLeft: 18}}>Name</div>
+                        <input
+                            type="text"
+                            placeholder="Write your name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            style={{alignSelf: 'stretch', height: 56, padding: 18, background: 'white', borderRadius: 20, border: '1px #EAEAEA solid', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '400', boxSizing: 'border-box'}}
+                        />
+                    </div>
+                    <div style={{width: 350, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8}}>
+                        <div style={{alignSelf: 'stretch', color: '#D58699', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400', paddingLeft: 18}}>E-mail</div>
+                        <input
+                            type="email"
+                            placeholder="Write your e-mail"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            style={{alignSelf: 'stretch', height: 56, padding: 18, background: 'white', borderRadius: 20, border: '1px #EAEAEA solid', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '400', boxSizing: 'border-box'}}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Next Button */}
+            <div style={{width: '100%', paddingBottom: 60, paddingTop: 20, display: 'flex', justifyContent: 'center'}}>
+                <button
+                    onClick={handleNextClick}
+                    disabled={!isButtonEnabled}
+                    style={{width: 350, paddingTop: 18, paddingBottom: 18, background: isButtonEnabled ? '#FF69B4' : '#D5D5D5', borderRadius: 28, border: 'none', justifyContent: 'center', alignItems: 'center', color: 'white', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', cursor: isButtonEnabled ? 'pointer' : 'not-allowed'}}
+                >
+                    Next
+                </button>
+            </div>
+
+            {/* Home Indicator */}
+            <div style={{width: 390, height: 36, position: 'relative'}}>
+                <div style={{width: 134, height: 5, left: 128, top: 23, position: 'absolute', background: 'black', borderRadius: 100}} />
+            </div>
+        </div>
+    );
 };
 
 export default SignUpPage;
-
-const PageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px;
-  height: 100vh;
-  background-color: white;
-  position: relative;
-`;
-
-const Header = styled.h1`
-  font-size: 32px;
-  font-weight: bold;
-  color: #292929;
-  margin-bottom: 10px;
-  font-family: 'Pretendard', sans-serif;
-`;
-
-const Subtitle = styled.p`
-  font-size: 16px;
-  color: #9E9FAD;
-  margin-bottom: 40px;
-  font-family: 'Pretendard', sans-serif;
-`;
-
-const InputContainer = styled.div`
-  width: 100%;
-  max-width: 350px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 40px;
-`;
-
-const InputLabel = styled.label`
-  font-size: 14px;
-  color: #292929;
-  font-weight: 600;
-  font-family: 'Pretendard', sans-serif;
-`;
-
-const StyledInput = styled.input`
-  width: 100%;
-  padding: 15px;
-  border: 1px solid #EAEAEA;
-  border-radius: 10px;
-  font-size: 16px;
-  font-family: 'Pretendard', sans-serif;
-
-  &:focus {
-    outline: none;
-    border-color: #FFC90F;
-  }
-`;
-
-const NextButton = styled.button`
-  width: 100%;
-  max-width: 350px;
-  padding: 18px;
-  background-color: ${({ disabled }) => (disabled ? '#D5D5D5' : '#FF69B4')}; // Gray when disabled, Pink when enabled
-  color: white;
-  border: none;
-  border-radius: 28px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
-  position: absolute;
-  bottom: 40px;
-  font-family: 'Pretendard', sans-serif;
-  transition: background-color 0.3s;
-`;
