@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/layout/BottomNav';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
 import { getDdaysByUserId } from '../../api/dday';
-import { getBucketListsByUserId } from '../../api/bucketlist';
+import { getBucketListsByUserId, updateBucketList } from '../../api/bucketlist';
 
 const DDayPage = () => {
   const navigate = useNavigate();
@@ -12,30 +12,30 @@ const DDayPage = () => {
   const [bucketList, setBucketList] = useState([]);
   const [ddayList, setDdayList] = useState([]);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     // TODO: Replace with actual user ID from auth context
     const userId = 1;
 
-    const fetchData = async () => {
-      try {
-        if (activeTab === 'dday') {
-          const response = await getDdaysByUserId(userId);
-          if (response.success) {
-            setDdayList(response.dday);
-          }
-        } else if (activeTab === 'bucketList') {
-          const response = await getBucketListsByUserId(userId);
-          if (response.success) {
-            setBucketList(response.bucketlist);
-          }
+    try {
+      if (activeTab === 'dday') {
+        const response = await getDdaysByUserId(userId);
+        if (response.success) {
+          setDdayList(response.dday);
         }
-      } catch (error) {
-        console.error(`Failed to fetch ${activeTab}:`, error);
+      } else if (activeTab === 'bucketList') {
+        const response = await getBucketListsByUserId(userId);
+        if (response.success) {
+          setBucketList(response.bucketlist);
+        }
       }
-    };
-
-    fetchData();
+    } catch (error) {
+      console.error(`Failed to fetch ${activeTab}:`, error);
+    }
   }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAddButtonClick = () => {
     if (activeTab === 'dday') {
@@ -53,13 +53,13 @@ const DDayPage = () => {
     navigate(`/dday/bucket-list/${item.id}`, { state: { item } });
   };
 
-  const handleToggleComplete = (id) => {
-    setBucketList(prevList => {
-      const updatedList = prevList.map(item =>
-        item.id === id ? { ...item, completed: !item.completed } : item
-      );
-      return updatedList.sort((a, b) => a.completed - b.completed);
-    });
+  const handleToggleComplete = async (id, currentStatus) => {
+    try {
+      await updateBucketList(id, !currentStatus);
+      fetchData(); // Re-fetch the list to update UI
+    } catch (error) {
+      console.error('Failed to update bucket list item status:', error);
+    }
   };
 
   const calculateDday = (date) => {
@@ -125,20 +125,32 @@ const DDayPage = () => {
               <BucketListItemWrapper key={item.id}>
                 <BucketListItemBar completed={item.is_completed} />
                 <BucketListItemContent completed={item.is_completed}>
-                  <div onClick={(e) => { e.stopPropagation(); handleToggleComplete(item.id); }}>
-                    {item.is_completed ? (
-                      <CompletedCheckbox>
-                        <CheckedIcon viewBox="0 0 24 24">
-                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                        </CheckedIcon>
-                      </CompletedCheckbox>
-                    ) : (
-                      <EmptyCheckbox />
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5.07px' }}>
+                    <div onClick={(e) => { e.stopPropagation(); handleToggleComplete(item.id, item.is_completed); }}>
+                      {item.is_completed ? (
+                        <CompletedCheckbox>
+                          <CheckedIcon viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                          </CheckedIcon>
+                        </CompletedCheckbox>
+                      ) : (
+                        <EmptyCheckbox />
+                      )}
+                    </div>
+                    <BucketListItemInfo onClick={() => handleBucketListItemClick(item)}>
+                      <BucketListItemText completed={item.is_completed}>
+                        {item.content}
+                      </BucketListItemText>
+                      {item.target_date && (
+                        <BucketListItemDate>
+                          {new Date(item.target_date).toLocaleDateString()}
+                        </BucketListItemDate>
+                      )}
+                    </BucketListItemInfo>
                   </div>
-                  <BucketListItemText completed={item.is_completed} onClick={() => handleBucketListItemClick(item)}>
-                    {item.content}
-                  </BucketListItemText>
+                  {item.target_date && (
+                    <DDayItemDDay>{calculateDday(item.target_date)}</DDayItemDDay>
+                  )}
                 </BucketListItemContent>
               </BucketListItemWrapper>
             ))}
@@ -390,14 +402,14 @@ const BucketListItemBar = styled.div`
 const BucketListItemContent = styled.div`
   width: 347.46px;
   height: 54px;
-  padding: 8.24px 6.34px;
+  padding: 8.24px 12px; /* Adjusted padding */
   left: 2.54px;
   top: 0px;
   position: absolute;
   background: #f4f8ea;
   border-radius: 5.07px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between; /* Use space-between */
   align-items: center;
   gap: 5.07px;
   box-sizing: border-box;
@@ -430,6 +442,13 @@ const CheckedIcon = styled.svg`
   fill: white;
 `;
 
+const BucketListItemInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+`;
+
 const BucketListItemText = styled.div`
   color: black;
   font-size: 16px;
@@ -437,4 +456,11 @@ const BucketListItemText = styled.div`
   font-weight: 700;
   text-decoration: ${(props) => (props.completed ? 'line-through' : 'none')};
   word-wrap: break-word;
+`;
+
+const BucketListItemDate = styled.div`
+  color: #52555d;
+  font-size: 12px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 400;
 `;

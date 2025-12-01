@@ -372,16 +372,17 @@ app.get('/api/bucketlist/:id', async (req, res) => {
 
 // Bucket List 생성
 app.post('/api/bucketlist', async (req, res) => {
-    const { userId, content } = req.body;
+    const { userId, content, target_date } = req.body;
     try {
         const connection = await pool.getConnection();
         const [result] = await connection.execute(
-            'INSERT INTO bucket_list (user_id, content) VALUES (?, ?)',
-            [userId, content]
+            'INSERT INTO bucket_list (user_id, content, target_date) VALUES (?, ?, ?)',
+            [userId, content, target_date]
         );
         connection.release();
         res.status(201).json({ success: true, message: 'Bucket List created.', bucketlistId: result.insertId });
     } catch (error) {
+        console.error('Error creating Bucket List:', error);
         res.status(500).json({ success: false, message: 'Server error.', error });
     }
 });
@@ -389,20 +390,38 @@ app.post('/api/bucketlist', async (req, res) => {
 // Bucket List 수정
 app.put('/api/bucketlist/:id', async (req, res) => {
     const { id } = req.params;
-    const { content, isCompleted } = req.body;
+    const fieldsToUpdate = req.body;
+
+    const allowedFields = ['content', 'is_completed', 'target_date'];
+    const updates = [];
+    const values = [];
+
+    for (const field of allowedFields) {
+        if (fieldsToUpdate.hasOwnProperty(field)) {
+            updates.push(`${field} = ?`);
+            values.push(fieldsToUpdate[field]);
+        }
+    }
+
+    if (updates.length === 0) {
+        return res.status(400).json({ success: false, message: 'No fields to update.' });
+    }
+
+    values.push(id);
+    const sql = `UPDATE bucket_list SET ${updates.join(', ')} WHERE id = ?`;
+
     try {
         const connection = await pool.getConnection();
-        const [result] = await connection.execute(
-            'UPDATE bucket_list SET content = ?, is_completed = ? WHERE id = ?',
-            [content, isCompleted, id]
-        );
+        const [result] = await connection.execute(sql, values);
         connection.release();
+
         if (result.affectedRows > 0) {
             res.json({ success: true, message: 'Bucket List updated.' });
         } else {
             res.status(404).json({ success: false, message: 'Bucket List not found.' });
         }
     } catch (error) {
+        console.error('Error updating Bucket List:', error);
         res.status(500).json({ success: false, message: 'Server error.', error });
     }
 });
