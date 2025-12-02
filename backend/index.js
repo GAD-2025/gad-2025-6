@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
+const morgan = require('morgan');
 
 const app = express();
 const port = 3001;
@@ -12,6 +13,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(morgan('dev'));
 
 // MySQL Connection Pool 설정
 const pool = mysql.createPool({
