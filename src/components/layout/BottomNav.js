@@ -1,17 +1,22 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ReactComponent as HomeIcon } from '../../assets/icons/Home.svg';
-import { ReactComponent as LetterIcon } from '../../assets/icons/Component 44.svg';
-import { ReactComponent as QuizIcon } from '../../assets/icons/Component 47.svg';
-import { ReactComponent as DDayIcon } from '../../assets/icons/Component 43.svg';
-import { ReactComponent as MyIcon } from '../../assets/icons/My.svg';
+import { ReactComponent as HomeDefault } from '../../assets/icons/home-default.svg';
+import { ReactComponent as HomeActive } from '../../assets/icons/home-active.svg';
+import { ReactComponent as LetterDefault } from '../../assets/icons/letter-default.svg';
+import { ReactComponent as LetterActive } from '../../assets/icons/letter-active.svg';
+import { ReactComponent as QuizDefault } from '../../assets/icons/quiz-default.svg';
+import { ReactComponent as QuizActive } from '../../assets/icons/quiz-active.svg';
+import { ReactComponent as DayDefault } from '../../assets/icons/day-default.svg';
+import { ReactComponent as DayActive } from '../../assets/icons/day-active.svg';
+import { ReactComponent as UserDefault } from '../../assets/icons/user-default.svg';
+import { ReactComponent as UserActive } from '../../assets/icons/user-active.svg';
 
 const navItems = [
-  { to: '/home', icon: HomeIcon, label: 'Home' },
-  { to: '/slow-letter', icon: LetterIcon, label: 'Letter' },
-  { to: '/daily-quiz', icon: QuizIcon, label: 'Quiz' },
-  { to: '/dday', icon: DDayIcon, label: 'D-day' },
-  { to: '/my-page', icon: MyIcon, label: 'My' },
+  { to: '/home', icon: HomeDefault, activeIcon: HomeActive, label: 'Home' },
+  { to: '/slow-letter', icon: LetterDefault, activeIcon: LetterActive, label: 'Letter' },
+  { to: '/daily-quiz', icon: QuizDefault, activeIcon: QuizActive, label: 'Quiz' },
+  { to: '/dday', icon: DayDefault, activeIcon: DayActive, label: 'D-day' },
+  { to: '/my-page', icon: UserDefault, activeIcon: UserActive, label: 'My' },
 ];
 
 const BottomNav = () => {
@@ -27,7 +32,8 @@ const BottomNav = () => {
   };
 
   return (
-    <div style={{
+    <div
+      style={{
         width: '100%',
         height: 88,
         position: 'absolute',
@@ -43,32 +49,53 @@ const BottomNav = () => {
         alignItems: 'center',
         paddingTop: 12,
         boxSizing: 'border-box',
-    }}>
-        {navItems.map(item => {
-          const isActive = item.to === '/'
-            ? location.pathname === item.to
-            : location.pathname.startsWith(item.to);
-          let color;
-          if (item.label === 'Letter') {
-            color = isActive ? '#A17E66' : '#2A343D';
-          } else if (item.label === 'D-day') {
-            color = isActive ? '#9CB06E' : '#2A343D';
-          } else if (item.label === 'My') {
-            color = isActive ? '#A17E66' : '#33363F';
-          } else {
-            color = isActive ? (item.label === 'Home' ? '#D58699' : '#F8DA72') : '#33363F';
-          }
-          const Icon = item.icon;
+      }}
+    >
+      {navItems.map((item) => {
+        const isActive =
+          item.to === '/' ? location.pathname === item.to : location.pathname.startsWith(item.to);
 
-          return (
-            <Link to={item.to} key={item.label} style={{...navItemStyle, color}}>
-              <Icon style={{ width: 24, height: 24, fill: color }} />
-              <div style={{ textAlign: 'center', fontSize: 12, fontFamily: 'Pangolin', fontWeight: '400', lineHeight: '12px', wordWrap: 'break-word' }}>{item.label}</div>
-            </Link>
-          );
-        })}
-      <div style={{width: 390, height: 36, left: 0, top: 52, position: 'absolute', pointerEvents: 'none'}}>
-        <div style={{width: 134, height: 5, left: 128, top: 23, position: 'absolute', background: 'white', borderRadius: 100}} />
+        const Icon = isActive ? item?.activeIcon : item.icon;
+
+        return (
+          <Link to={item.to} key={item.label} style={{ ...navItemStyle }}>
+            <Icon style={{ width: 24, height: 24 }} />
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: 12,
+                fontFamily: 'Pangolin',
+                fontWeight: '400',
+                lineHeight: '12px',
+                wordWrap: 'break-word',
+              }}
+            >
+              {item.label}
+            </div>
+          </Link>
+        );
+      })}
+      <div
+        style={{
+          width: 390,
+          height: 36,
+          left: 0,
+          top: 52,
+          position: 'absolute',
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          style={{
+            width: 134,
+            height: 5,
+            left: 128,
+            top: 23,
+            position: 'absolute',
+            background: 'white',
+            borderRadius: 100,
+          }}
+        />
       </div>
     </div>
   );

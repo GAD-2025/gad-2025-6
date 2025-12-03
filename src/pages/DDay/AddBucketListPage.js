@@ -1,41 +1,35 @@
-import React, { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { createBucketList } from '../../api/bucketlist';
-import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/Component 43.svg';
-import { ReactComponent as CalendarIcon } from '../../assets/icons/Component 47.svg';
+import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg';
 
 function AddBucketListPage() {
   const navigate = useNavigate();
+  const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [targetDate, setTargetDate] = useState('');
-  const [rawDate, setRawDate] = useState('');
-  const dateInputRef = useRef(null);
+
+  const isSaveButtonActive = title.trim() !== '' && content.trim() !== '';
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleCalendarIconClick = () => {
-    dateInputRef.current.showPicker();
-  };
-
-  const handleDateChange = (e) => {
-    const dateValue = e.target.value;
-    setRawDate(dateValue); // Keep YYYY-MM-DD for the API
-    setTargetDate(dateValue.replace(/-/g, '.')); // Format to YYYY.MM.DD for display
-  };
-
   const handleSave = async () => {
-    if (!isSaveButtonActive) return;
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user.id;
+    const matchingId = user.matching_id;
 
-    // TODO: Replace with actual user ID from auth context
-    const userId = 1;
+    if (!matchingId) {
+      alert('You need to be matched with someone to create a bucket list.');
+      return;
+    }
 
     const bucketListData = {
       userId,
+      matchingId,
+      title,
       content,
-      target_date: rawDate,
     };
 
     try {
@@ -46,8 +40,6 @@ function AddBucketListPage() {
       alert(`Failed to save Bucket List: ${error.message}`);
     }
   };
-  
-  const isSaveButtonActive = content.trim() !== '' && targetDate.trim() !== '';
 
   return (
     <PageWrapper>
@@ -60,33 +52,21 @@ function AddBucketListPage() {
 
       <ContentContainer>
         <InputGroup>
-          <Label>Bucket List Item</Label>
+          <Label>Name of Bucket Goal</Label>
           <StyledInput
             type="text"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Content of your bucket list item"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Name of the bucket goal"
           />
         </InputGroup>
-
         <InputGroup>
-          <Label>Target Date</Label>
-          <DateInputWrapper>
-            <StyledInput
-              type="text"
-              readOnly
-              value={targetDate}
-              placeholder="YYYY.MM.DD"
-            />
-            <HiddenDateInput
-                type="date"
-                ref={dateInputRef}
-                onChange={handleDateChange}
-            />
-            <CalendarButton onClick={handleCalendarIconClick}>
-              <CalendarIcon style={{ width: 20, height: 20 }} />
-            </CalendarButton>
-          </DateInputWrapper>
+          <Label>Details</Label>
+          <StyledTextArea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Details of the event"
+          />
         </InputGroup>
 
         <SaveButtonWrapper>
@@ -115,7 +95,6 @@ const PageWrapper = styled.div`
 
 const TopBarWrapper = styled.div`
   width: 100%;
-  max-width: 390px;
   height: 44px;
   position: relative;
   display: flex;
@@ -162,10 +141,11 @@ const InputGroup = styled.div`
 `;
 
 const Label = styled.div`
-  color: #84AF25;
+  color: #84af25;
   font-size: 24px;
   font-family: 'Pangolin', sans-serif;
   font-weight: 400;
+  text-align: left;
 `;
 
 const StyledInput = styled.input`
@@ -175,9 +155,9 @@ const StyledInput = styled.input`
   padding: 18px;
   background: white;
   border-radius: 20px;
-  outline: 1px #EAEAEA solid;
+  outline: 1px #eaeaea solid;
   border: none;
-  color: #2C2C2C;
+  color: #2c2c2c;
   font-size: 16px;
   font-family: 'Pretendard', sans-serif;
   font-weight: 700;
@@ -193,7 +173,7 @@ const DateInputWrapper = styled.div`
   padding: 0 18px;
   background: white;
   border-radius: 20px;
-  outline: 1px #EAEAEA solid;
+  outline: 1px #eaeaea solid;
   box-sizing: border-box;
 `;
 
@@ -212,8 +192,7 @@ const SaveButtonWrapper = styled.div`
   width: 100%;
   display: flex;
   justify-content: center;
-  padding-top: 10px; 
-  margin-top: auto; /* Push save button to the bottom */
+  padding-top: 10px;
 `;
 
 const SaveButton = styled.div`
@@ -225,9 +204,26 @@ const SaveButton = styled.div`
   align-items: center;
   display: flex;
   cursor: ${(props) => (props.active ? 'pointer' : 'default')};
-  color: #F1F1F1;
+  color: #f1f1f1;
   font-size: 20px;
   font-family: 'Pretendard', sans-serif;
   font-weight: 700;
   word-wrap: break-word;
+`;
+
+const StyledTextArea = styled.textarea`
+  width: 100%;
+  min-height: 236px;
+  padding: 18px 24px;
+  background: white;
+  border-radius: 20px;
+  outline: 1px #eaeaea solid;
+  border: none;
+  resize: none;
+  color: #2c2c2c;
+  font-size: 16px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  background: transparent;
+  box-sizing: border-box;
 `;

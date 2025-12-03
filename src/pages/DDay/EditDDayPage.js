@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ddayData } from '../../data/ddayData';
+import { updateDday } from '../../api/dday';
 
 const PageContainer = styled.div`
   width: 100%;
@@ -55,7 +56,7 @@ const BatteryIcon = styled.div`
   position: absolute;
   & > div {
     width: 19.61px;
-    height: 8.40px;
+    height: 8.4px;
     left: 1.87px;
     top: 1.87px;
     position: absolute;
@@ -96,16 +97,16 @@ const ArrowLeftIcon = styled.div`
   width: 24px;
   height: 24px;
   left: 20px;
-  top: 10.50px;
+  top: 10.5px;
   position: absolute;
   cursor: pointer;
   & > div {
     width: 20px;
     height: 13px;
     left: 2px;
-    top: 5.50px;
+    top: 5.5px;
     position: absolute;
-    background: var(--Grayscale-900, #1A1B1E);
+    background: var(--Grayscale-900, #1a1b1e);
   }
 `;
 
@@ -141,7 +142,7 @@ const InputGroup = styled.div`
 
 const InputLabel = styled.div`
   align-self: stretch;
-  color: #84AF25;
+  color: #84af25;
   font-size: 24px;
   font-family: Pangolin;
   font-weight: 400;
@@ -149,13 +150,13 @@ const InputLabel = styled.div`
 `;
 
 const InputField = styled.div`
-  width: 350px;
-  height: 56px;
+  box-sizing: border-box;
+  width: 100%;
   padding: 18px;
   background: white;
   overflow: hidden;
   border-radius: 20px;
-  outline: 1px #EAEAEA solid;
+  outline: 1px #eaeaea solid;
   outline-offset: -1px;
   justify-content: center;
   align-items: center;
@@ -166,7 +167,7 @@ const InputField = styled.div`
 const StyledInput = styled.input`
   flex: 1 1 0;
   align-self: stretch;
-  color: #2C2C2C;
+  color: #2c2c2c;
   font-size: 16px;
   font-family: Pretendard;
   font-weight: 700;
@@ -176,7 +177,7 @@ const StyledInput = styled.input`
   background: transparent;
   box-sizing: border-box;
   &::placeholder {
-    color: #DBDBDB;
+    color: #dbdbdb;
     font-weight: 400;
   }
 `;
@@ -185,7 +186,7 @@ const StyledTextArea = styled.textarea`
   width: 100%;
   flex-grow: 1;
   min-height: 100px;
-  color: #2C2C2C;
+  color: #2c2c2c;
   font-size: 16px;
   font-family: Pretendard;
   font-weight: 700;
@@ -197,7 +198,7 @@ const StyledTextArea = styled.textarea`
   box-sizing: border-box;
   overflow-y: auto;
   &::placeholder {
-    color: #DBDBDB;
+    color: #dbdbdb;
     font-weight: 400;
   }
 `;
@@ -209,7 +210,8 @@ const CalendarIcon = styled.div`
 `;
 
 const SaveButton = styled.div`
-  width: 350px;
+  box-sizing: border-box;
+  width: 100%;
   padding-left: 74px;
   padding-right: 74px;
   padding-top: 18px;
@@ -229,7 +231,7 @@ const SaveButtonText = styled.div`
   justify-content: center;
   display: flex;
   flex-direction: column;
-  color: #F1F1F1;
+  color: #f1f1f1;
   font-size: 20px;
   font-family: Pretendard;
   font-weight: 700;
@@ -262,11 +264,11 @@ function EditDDayPage() {
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    const itemToEdit = location.state?.item || ddayData.find(d => d.id === parseInt(ddayId));
+    const itemToEdit = location.state?.item || ddayData.find((d) => d.id === parseInt(ddayId));
     if (itemToEdit) {
       setTitle(itemToEdit.title);
       setTargetDate(itemToEdit.date);
-      setDescription(itemToEdit.description);
+      setDescription(itemToEdit.content);
     }
   }, [ddayId, location.state]);
 
@@ -274,25 +276,34 @@ function EditDDayPage() {
     navigate(-1);
   };
 
-  const handleSave = () => {
-    // In a real app, you would dispatch an action to update the data
-    // For now, we will just navigate back.
-    navigate('/dday');
+  const handleSave = async () => {
+    try {
+      const ddayUpdateData = {
+        title,
+        date: targetDate,
+        content: description,
+      };
+
+      await updateDday(ddayId, ddayUpdateData);
+      navigate('/dday');
+    } catch (error) {
+      console.error('Failed to update D-Day:', error);
+      alert('Failed to update D-Day. Please try again.');
+    }
   };
 
-  const isSaveButtonActive = title.trim() !== '' && targetDate.trim() !== '' && description.trim() !== '';
+  const renderDateFormat = (dateStr) => {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   return (
     <PageContainer>
       <ContentWrapper>
         <HeaderSection>
-          <StatusBar>
-            <WifiIcon />
-            <BatteryIcon>
-              <div />
-            </BatteryIcon>
-            <TimeText>19:02</TimeText>
-          </StatusBar>
           <TopBar>
             <TopBarDefault>
               <ArrowLeftIcon onClick={handleBackClick}>
@@ -313,20 +324,9 @@ function EditDDayPage() {
                 </InputField>
               </InputGroup>
               <InputGroup>
-                <InputLabel>Target Date</InputLabel>
-                <InputField>
-                  <StyledInput
-                    type="text"
-                    value={targetDate}
-                    onChange={(e) => setTargetDate(e.target.value)}
-                    placeholder="YYYY-MM-DD"
-                  />
-                  <CalendarIcon />
-                </InputField>
-              </InputGroup>
-              <InputGroup>
                 <InputLabel>Description</InputLabel>
-                <div style={{
+                <div
+                  style={{
                     width: 350,
                     paddingTop: 18,
                     paddingBottom: 18,
@@ -339,8 +339,9 @@ function EditDDayPage() {
                     outlineOffset: '-1px',
                     display: 'flex',
                     flexDirection: 'column',
-                    boxSizing: 'border-box'
-                }}>
+                    boxSizing: 'border-box',
+                  }}
+                >
                   <StyledTextArea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -348,7 +349,19 @@ function EditDDayPage() {
                   />
                 </div>
               </InputGroup>
-              <SaveButton active={isSaveButtonActive} onClick={handleSave}>
+              <InputGroup>
+                <InputLabel>Target Date</InputLabel>
+                <InputField>
+                  <StyledInput
+                    type="date"
+                    value={renderDateFormat(targetDate)}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                    placeholder="YYYY-MM-DD"
+                  />
+                </InputField>
+              </InputGroup>
+
+              <SaveButton active onClick={handleSave}>
                 <SaveButtonText>Save</SaveButtonText>
               </SaveButton>
             </FormSection>
@@ -363,4 +376,3 @@ function EditDDayPage() {
 }
 
 export default EditDDayPage;
-
