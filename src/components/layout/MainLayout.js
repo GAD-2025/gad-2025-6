@@ -4,7 +4,7 @@ import BottomNav from './BottomNav';
 
 const MainLayout = () => {
   return (
-    <div style={{ width: 390, height: 844, position: 'relative' }}>
+    <div style={{ width: 390, height: '100dvh', position: 'relative' }}>
       <Outlet />
       <BottomNav />
     </div>

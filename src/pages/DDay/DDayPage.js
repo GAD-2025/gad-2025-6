@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/layout/BottomNav';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
-import { getDdaysByUserId } from '../../api/dday';
-import { getBucketListsByUserId, updateBucketList } from '../../api/bucketlist';
+import { getDdaysByMatchingId } from '../../api/dday';
+import { getBucketListsByMatchingId, updateBucketList } from '../../api/bucketlist';
 
 const DDayPage = () => {
   const navigate = useNavigate();
@@ -13,17 +13,25 @@ const DDayPage = () => {
   const [ddayList, setDdayList] = useState([]);
 
   const fetchData = useCallback(async () => {
-    // TODO: Replace with actual user ID from auth context
-    const userId = 1;
+    const user = JSON.parse(localStorage.getItem('user'));
+    const matchingId = user.matching_id;
 
     try {
       if (activeTab === 'dday') {
-        const response = await getDdaysByUserId(userId);
+        if (!matchingId) {
+          setDdayList([]);
+          return;
+        }
+        const response = await getDdaysByMatchingId(matchingId);
         if (response.success) {
           setDdayList(response.dday);
         }
       } else if (activeTab === 'bucketList') {
-        const response = await getBucketListsByUserId(userId);
+        if (!matchingId) {
+          setBucketList([]);
+          return;
+        }
+        const response = await getBucketListsByMatchingId(matchingId);
         if (response.success) {
           setBucketList(response.bucketlist);
         }
@@ -70,14 +78,22 @@ const DDayPage = () => {
     targetDate.setHours(0, 0, 0, 0);
     const diffTime = targetDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
-        return 'D-Day';
+      return 'D-Day';
     } else if (diffDays > 0) {
-        return `D-${diffDays}`;
+      return `D-${diffDays}`;
     } else {
-        return `D+${-diffDays}`;
+      return `D+${-diffDays}`;
     }
+  };
+
+  const renderDateFormat = (dateStr) => {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   return (
@@ -93,24 +109,28 @@ const DDayPage = () => {
       </TopNav>
       <Title>D-day & Bucket List</Title>
       <TabWrapper>
-        <Tab active={activeTab === 'dday'} onClick={() => setActiveTab('dday')}>D-day</Tab>
-        <Tab active={activeTab === 'bucketList'} onClick={() => setActiveTab('bucketList')}>Bucket List</Tab>
+        <Tab active={activeTab === 'dday'} onClick={() => setActiveTab('dday')}>
+          D-day
+        </Tab>
+        <Tab active={activeTab === 'bucketList'} onClick={() => setActiveTab('bucketList')}>
+          Bucket List
+        </Tab>
       </TabWrapper>
       <ContentWrapper>
         {activeTab === 'dday' ? (
           <>
-            <DDayCard>
+            {/* <DDayCard>
               <DDayText>Time Remaining Until Reunion</DDayText>
               <DDayValue>Set D-day</DDayValue>
               <DDaySubText>Enter the date to start the excitement!</DDaySubText>
-            </DDayCard>
+            </DDayCard> */}
             <DDayList>
-              {ddayList.map(item => (
+              {ddayList.map((item) => (
                 <DDayItem key={item.id} onClick={() => handleDDayItemClick(item)}>
                   <DDayItemBar />
                   <DDayItemContent>
                     <DDayItemInfo>
-                      <DDayItemDate>{item.date}</DDayItemDate>
+                      <DDayItemDate>{renderDateFormat(item.date)}</DDayItemDate>
                       <DDayItemTitle>{item.title}</DDayItemTitle>
                     </DDayItemInfo>
                     <DDayItemDDay>{calculateDday(item.date)}</DDayItemDDay>
@@ -126,7 +146,12 @@ const DDayPage = () => {
                 <BucketListItemBar completed={item.is_completed} />
                 <BucketListItemContent completed={item.is_completed}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5.07px' }}>
-                    <div onClick={(e) => { e.stopPropagation(); handleToggleComplete(item.id, item.is_completed); }}>
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleComplete(item.id, item.is_completed);
+                      }}
+                    >
                       {item.is_completed ? (
                         <CompletedCheckbox>
                           <CheckedIcon viewBox="0 0 24 24">
@@ -139,18 +164,10 @@ const DDayPage = () => {
                     </div>
                     <BucketListItemInfo onClick={() => handleBucketListItemClick(item)}>
                       <BucketListItemText completed={item.is_completed}>
-                        {item.content}
+                        {item.title}
                       </BucketListItemText>
-                      {item.target_date && (
-                        <BucketListItemDate>
-                          {new Date(item.target_date).toLocaleDateString()}
-                        </BucketListItemDate>
-                      )}
                     </BucketListItemInfo>
                   </div>
-                  {item.target_date && (
-                    <DDayItemDDay>{calculateDday(item.target_date)}</DDayItemDDay>
-                  )}
                 </BucketListItemContent>
               </BucketListItemWrapper>
             ))}
@@ -421,14 +438,14 @@ const EmptyCheckbox = styled.div`
   position: relative;
   background: white;
   border-radius: 1.27px;
-  border: 0.63px #6F737D solid;
+  border: 0.63px #6f737d solid;
 `;
 
 const CompletedCheckbox = styled.div`
   width: 16px;
   height: 17px;
   position: relative;
-  background: #4E78D2;
+  background: #4e78d2;
   overflow: hidden;
   border-radius: 1.27px;
 `;
@@ -456,11 +473,4 @@ const BucketListItemText = styled.div`
   font-weight: 700;
   text-decoration: ${(props) => (props.completed ? 'line-through' : 'none')};
   word-wrap: break-word;
-`;
-
-const BucketListItemDate = styled.div`
-  color: #52555d;
-  font-size: 12px;
-  font-family: 'Pretendard', sans-serif;
-  font-weight: 400;
 `;

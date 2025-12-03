@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { createDday } from '../../api/dday';
-import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/Component 43.svg'; // Assuming this is the arrow left icon
-import { ReactComponent as CalendarIcon } from '../../assets/icons/Component 47.svg'; // Assuming this is the calendar icon
+import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/day-default.svg'; // Assuming this is the arrow left icon
+import { ReactComponent as CalendarIcon } from '../../assets/icons/quiz-active.svg';
 
 function AddDDayPage() {
   const navigate = useNavigate();
@@ -28,20 +28,21 @@ function AddDDayPage() {
   };
 
   const handleSave = async () => {
-    alert('Save button clicked!'); // Debugging alert
     if (!isSaveButtonActive) {
       alert('Save button is not active.'); // Debugging alert
       return;
     }
 
     // TODO: Replace with actual user ID from auth context
-    const userId = 1;
+    const userId = JSON.parse(localStorage.getItem('user')).id;
+    const matchingId = JSON.parse(localStorage.getItem('user')).matching_id;
 
     const ddayData = {
       userId,
       title: eventName,
       date: rawDate,
       content,
+      matchingId,
     };
 
     try {
@@ -53,8 +54,9 @@ function AddDDayPage() {
       alert(`Failed to save D-Day: ${error.message}`); // Debugging alert
     }
   };
-  
-  const isSaveButtonActive = eventName.trim() !== '' && content.trim() !== '' && targetDate.trim() !== '';
+
+  const isSaveButtonActive =
+    eventName.trim() !== '' && content.trim() !== '' && targetDate.trim() !== '';
   const saveButtonBackgroundColor = isSaveButtonActive ? '#84AF25' : '#D5D5D5';
 
   return (
@@ -99,17 +101,8 @@ function AddDDayPage() {
         <InputGroup>
           <Label>Target Date</Label>
           <DateInputWrapper>
-            <StyledInput
-              type="text"
-              readOnly
-              value={targetDate}
-              placeholder="YYYY.MM.DD"
-            />
-            <HiddenDateInput
-                type="date"
-                ref={dateInputRef}
-                onChange={handleDateChange}
-            />
+            <StyledInput type="text" readOnly value={targetDate} placeholder="YYYY.MM.DD" />
+            <HiddenDateInput type="date" ref={dateInputRef} onChange={handleDateChange} />
             <CalendarButton onClick={handleCalendarIconClick}>
               <CalendarIcon style={{ width: 20, height: 20 }} />
             </CalendarButton>
@@ -208,7 +201,7 @@ const BackButton = styled.div`
   justify-content: center;
   // ArrowLeftIcon already has styles, may need to adjust fill if it's black by default
   svg {
-    fill: #1A1B1E; // Adjust color if needed
+    fill: #1a1b1e; // Adjust color if needed
   }
 `;
 
@@ -238,7 +231,7 @@ const InputGroup = styled.div`
 `;
 
 const Label = styled.div`
-  color: #84AF25;
+  color: #84af25;
   font-size: 24px;
   font-family: 'Pangolin', sans-serif;
   font-weight: 400;
@@ -251,9 +244,9 @@ const StyledInput = styled.input`
   padding: 18px;
   background: white;
   border-radius: 20px;
-  outline: 1px #EAEAEA solid;
+  outline: 1px #eaeaea solid;
   border: none;
-  color: #2C2C2C;
+  color: #2c2c2c;
   font-size: 16px;
   font-family: 'Pretendard', sans-serif;
   font-weight: 700;
@@ -267,10 +260,10 @@ const StyledTextArea = styled.textarea`
   padding: 18px 24px;
   background: white;
   border-radius: 20px;
-  outline: 1px #EAEAEA solid;
+  outline: 1px #eaeaea solid;
   border: none;
   resize: none;
-  color: #2C2C2C;
+  color: #2c2c2c;
   font-size: 16px;
   font-family: 'Pretendard', sans-serif;
   font-weight: 700;
@@ -286,7 +279,7 @@ const DateInputWrapper = styled.div`
   padding: 0 18px;
   background: white;
   border-radius: 20px;
-  outline: 1px #EAEAEA solid;
+  outline: 1px #eaeaea solid;
   box-sizing: border-box;
 `;
 
@@ -321,7 +314,7 @@ const SaveButton = styled.div`
   align-items: center;
   display: flex;
   cursor: ${(props) => (props.active ? 'pointer' : 'default')};
-  color: #F1F1F1;
+  color: #f1f1f1;
   font-size: 20px;
   font-family: 'Pretendard', sans-serif;
   font-weight: 700;

@@ -1,32 +1,60 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 import { Link } from 'react-router-dom'; // Import Link
 import homeBackgroundImage from '../../assets/images/home_background.jpeg'; // Import the background image
 
-
 const HomePage = () => {
+  const [ddays, setDdays] = React.useState([]);
+
   const navigate = useNavigate(); // Initialize useNavigate
+  const user = JSON.parse(localStorage.getItem('user')); // Example of getting user data
+
+  const dday = ddays?.at(Math.floor(Math.random() * ddays.length));
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/signin'); // Redirect to sign-in page if not authenticated
+    }
+
+    // fetch GET /api/ddays/user/{userId}
+    const fetchDdays = async () => {
+      try {
+        console.log(process.env.REACT_APP_API_URL);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/dday/user/${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setDdays(data.dday);
+        } else {
+          console.error('Failed to fetch D-Days');
+        }
+      } catch (error) {
+        console.error('Error fetching D-Days:', error);
+      }
+    };
+
+    fetchDdays();
+  }, []);
+
+  const calculateDDay = (targetDate) => {
+    console.log(targetDate);
+    const today = new Date();
+    const target = new Date(targetDate);
+    const diffTime = target - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
+  };
 
   return (
     <PageWrapper>
       <BackgroundImage src={homeBackgroundImage} alt="Background" />
       <ContentWrapper>
-        <TopNav>
-          <Time>19:02</Time>
-          <StatusBar>
-            <WifiIcon />
-            <BatteryIcon>
-              <BatteryFill />
-            </BatteryIcon>
-          </StatusBar>
-        </TopNav>
         <CardsWrapper>
           <CardRow>
             <DDayCard onClick={() => navigate('/dday')} style={{ cursor: 'pointer' }}>
-              <DDayValue>D-22</DDayValue>
-              <DDayText>London trip London trip London trip</DDayText>
+              <DDayValue>{calculateDDay(dday?.date)}</DDayValue>
+              <DDayText>{dday?.title}</DDayText>
             </DDayCard>
             <NewLetterCard onClick={() => navigate('/slow-letter')} style={{ cursor: 'pointer' }}>
               <NewLetterText>New!</NewLetterText>
@@ -45,13 +73,13 @@ const HomePage = () => {
   );
 };
 
-
 const PageWrapper = styled.div`
   width: 100%;
   height: 100vh;
   position: relative;
   background: white;
   overflow: hidden;
+  padding-top: 14px;
 `;
 
 const BackgroundImage = styled.img`
@@ -60,12 +88,11 @@ const BackgroundImage = styled.img`
   position: absolute;
   object-fit: cover;
   object-position: center;
+  inset: 0;
+  z-index: 0;
 `;
 
 const ContentWrapper = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -73,65 +100,18 @@ const ContentWrapper = styled.div`
   gap: 15px;
 `;
 
-const TopNav = styled.div`
-  width: 390px;
-  height: 44px;
-  position: relative;
-  overflow: hidden;
-`;
-
-const Time = styled.div`
-  position: absolute;
-  left: 36.87px;
-  top: 15.54px;
-  text-align: center;
-  color: black;
-  font-size: 17.48px;
-  font-family: SF Pro Display, sans-serif;
-  font-weight: 600;
-  line-height: 17.48px;
-`;
-
-const StatusBar = styled.div`
-  position: absolute;
-  right: 14.5px;
-  top: 17.48px;
-  display: flex;
-  gap: 5px;
-`;
-
-const WifiIcon = styled.div`
-  width: 17.48px;
-  height: 12.62px;
-  background: black;
-`;
-
-const BatteryIcon = styled.div`
-  width: 25.83px;
-  height: 12.14px;
-  position: relative;
-`;
-
-const BatteryFill = styled.div`
-  width: 19.61px;
-  height: 8.4px;
-  left: 1.87px;
-  top: 1.87px;
-  position: absolute;
-  background: black;
-`;
-
 const CardsWrapper = styled.div`
   width: 350px;
   display: flex;
   flex-direction: column;
   gap: 11px;
+  z-index: 10;
 `;
 
 const CardRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: 11px;
 `;
 
@@ -144,7 +124,7 @@ const DDayCard = styled.div`
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 24px;
 `;
 
 const DDayValue = styled.div`
@@ -165,9 +145,8 @@ const DDayText = styled.div`
   word-wrap: break-word;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  display: flex;
+  align-items: center;
 `;
 
 const NewLetterCard = styled.div`

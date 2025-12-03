@@ -1,27 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { signup } from '../../api/auth';
+import { useNavigate } from 'react-router-dom';
 
 const InvitationCodePage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { name, email, password } = location.state || {};
-  const [myCode, setMyCode] = useState('');
   const [opponentCode, setOpponentCode] = useState('');
 
-  useEffect(() => {
-    // Generate a random 6-character code when the component mounts
-    const generateRandomCode = () => {
-      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = '';
-      for (let i = 0; i < 6; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-      return result;
-    };
-    setMyCode(generateRandomCode());
-  }, []);
+  const myCode = JSON.parse(localStorage.getItem('user')).user_code || '...';
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(myCode);
@@ -31,24 +16,30 @@ const InvitationCodePage = () => {
   };
 
   const handleConnectClick = async () => {
-    if (!name || !email || !password) {
-      alert("Something went wrong, please start the sign up process again.");
-      navigate('/signup');
-      return;
-    }
-    
+    const userId = JSON.parse(localStorage.getItem('user')).id;
+
     try {
-      const result = await signup(name, email, password);
-      if (result.success) {
-        // The original logic connected with an opponent, we will just navigate to onboarding
-        console.log("Signup successful, connecting with opponent's code:", opponentCode);
+      const result = await fetch(`${process.env.REACT_APP_API_URL}/api/matching`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          partnerCode: opponentCode,
+        }),
+      });
+
+      if (result.ok) {
         navigate('/onboarding');
       } else {
-        alert(`Sign up failed: ${result.message}`);
+        const errorData = await result.json();
+        alert(`Connection failed: ${errorData.message}`);
       }
     } catch (error) {
-      console.error('Signup error:', error);
-      alert('An error occurred during sign up.');
+      console.error('Error during matching:', error);
+      alert('An error occurred while trying to connect. Please try again.');
+      return;
     }
   };
 
@@ -77,9 +68,7 @@ const InvitationCodePage = () => {
         </CodeSection>
       </CodeContainer>
 
-      <ConnectButton onClick={handleConnectClick}>
-        Complete
-      </ConnectButton>
+      <ConnectButton onClick={handleConnectClick}>Complete</ConnectButton>
     </PageWrapper>
   );
 };
@@ -106,7 +95,7 @@ const Header = styled.h1`
 
 const Subtitle = styled.p`
   font-size: 16px;
-  color: #9E9FAD;
+  color: #9e9fad;
   margin-bottom: 40px;
   font-family: 'Pretendard', sans-serif;
   text-align: center;
@@ -137,19 +126,19 @@ const InputLabel = styled.label`
 const MyCodeDisplay = styled.div`
   width: 100%;
   padding: 15px;
-  border: 1px solid #EAEAEA;
+  border: 1px solid #eaeaea;
   border-radius: 10px;
   font-size: 16px;
   font-family: 'Pretendard', sans-serif;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #FAFAFA;
+  background-color: #fafafa;
 `;
 
 const CopyButton = styled.button`
   padding: 8px 12px;
-  background-color: #FFC90F;
+  background-color: #ffc90f;
   color: white;
   border: none;
   border-radius: 8px;
@@ -164,14 +153,14 @@ const CopyButton = styled.button`
 const StyledInput = styled.input`
   width: 100%;
   padding: 15px;
-  border: 1px solid #EAEAEA;
+  border: 1px solid #eaeaea;
   border-radius: 10px;
   font-size: 16px;
   font-family: 'Pretendard', sans-serif;
 
   &:focus {
     outline: none;
-    border-color: #FFC90F;
+    border-color: #ffc90f;
   }
 `;
 
@@ -179,7 +168,7 @@ const ConnectButton = styled.button`
   width: 100%;
   max-width: 350px;
   padding: 18px;
-  background-color: #FFC90F;
+  background-color: #ffc90f;
   color: white;
   border: none;
   border-radius: 28px;
