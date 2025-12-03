@@ -1,7 +1,7 @@
-const API_URL = '/api';
+const API_URL = process.env.REACT_APP_API_URL + '/api' || 'http://localhost:4000/api';
 
-export const getBucketListsByUserId = async (userId) => {
-    const response = await fetch(`${API_URL}/bucketlist/user/${userId}`);
+export const getBucketListsByMatchingId = async (matchingId) => {
+    const response = await fetch(`${API_URL}/bucketlist/matching/${matchingId}`);
     if (!response.ok) {
         throw new Error('Failed to fetch Bucket List items');
     }
