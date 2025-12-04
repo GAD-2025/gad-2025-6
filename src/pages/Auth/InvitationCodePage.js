@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { login as apiLogin } from '../../api/auth';
+import { useAuth } from '../../context/AuthContext';
 
 const InvitationCodePage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [opponentCode, setOpponentCode] = useState('');
 
-  const myCode = JSON.parse(localStorage.getItem('user')).user_code || '...';
+  const storedUser = JSON.parse(localStorage.getItem('user'));
+  const myCode = storedUser.user_code || '...';
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(myCode);
@@ -16,7 +20,9 @@ const InvitationCodePage = () => {
   };
 
   const handleConnectClick = async () => {
-    const userId = JSON.parse(localStorage.getItem('user')).id;
+    const userId = storedUser.id;
+    const userEmail = storedUser.email;
+    const userPassword = storedUser.password;
 
     try {
       const result = await fetch(`${process.env.REACT_APP_API_URL}/api/matching`, {
@@ -31,6 +37,17 @@ const InvitationCodePage = () => {
       });
 
       if (result.ok) {
+        // 매칭 성공 후 login 요청을 보내서 matching_id를 fetching
+        if (userEmail && userPassword) {
+          try {
+            const loginResult = await apiLogin(userEmail, userPassword);
+            if (loginResult.success && loginResult.user) {
+              login(loginResult.user);
+            }
+          } catch (error) {
+            console.error('Failed to fetch updated matching_id:', error);
+          }
+        }
         navigate('/onboarding');
       } else {
         const errorData = await result.json();

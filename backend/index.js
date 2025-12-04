@@ -4,6 +4,8 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const morgan = require('morgan');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const port = 3001;
@@ -26,7 +28,55 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  multipleStatements: true, // 여러 SQL 문 실행 허용
 });
+
+// 데이터베이스 초기화 함수
+async function initializeDatabase() {
+  let connection;
+  try {
+    console.log('Checking database schema...');
+    connection = await pool.getConnection();
+
+    // users 테이블 존재 확인
+    const [tables] = await connection.query(
+      "SHOW TABLES LIKE 'users'"
+    );
+
+    if (tables.length === 0) {
+      console.log('Tables not found. Creating database schema...');
+
+      // schema.sql 파일 읽기
+      const schemaPath = path.join(__dirname, 'schema.sql');
+      const schema = fs.readFileSync(schemaPath, 'utf8');
+
+      // SQL 문을 개별적으로 실행
+      const statements = schema
+        .split(';')
+        .map(stmt => stmt.trim())
+        .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('/*'));
+
+      for (const statement of statements) {
+        if (statement.includes('DROP TABLE') ||
+            statement.includes('CREATE TABLE') ||
+            statement.includes('ALTER TABLE') ||
+            statement.includes('CREATE INDEX')) {
+          await connection.query(statement);
+        }
+      }
+
+      console.log('✓ Database schema created successfully!');
+    } else {
+      console.log('✓ Database schema already exists.');
+    }
+
+    connection.release();
+  } catch (error) {
+    if (connection) connection.release();
+    console.error('Error initializing database:', error);
+    throw error;
+  }
+}
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -803,7 +853,22 @@ app.delete('/api/matching/:matchingId', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Backend server listening at http://localhost:${port}`);
-  console.log('Access the DB test endpoint at http://localhost:3001/api/test-db');
-});
+// 서버 시작
+async function startServer() {
+  try {
+    // 데이터베이스 초기화
+    await initializeDatabase();
+
+    // 서버 시작
+    app.listen(port, () => {
+      console.log(`Backend server listening at http://localhost:${port}`);
+      console.log('Access the DB test endpoint at http://localhost:3001/api/test-db');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// 서버 시작 실행
+startServer();
