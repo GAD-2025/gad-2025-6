@@ -26,13 +26,17 @@ const WriteLetterPage = () => {
       alert("Please log in to send a letter.");
       return;
     }
+    if (title.trim() === '') {
+      alert("Letter title cannot be empty.");
+      return;
+    }
     if (content.trim() === '') {
       alert("Letter content cannot be empty.");
       return;
     }
 
     try {
-      const response = await sendLetter({ content: content }, user.id); // Only sending content for now
+      const response = await sendLetter({ title: title, content: content }, user.id);
       if (response.success) {
         alert("Letter sent successfully!");
         navigate('/slow-letter'); // Navigate to the slow letter list page
@@ -45,7 +49,7 @@ const WriteLetterPage = () => {
     }
   };
 
-  const isSendButtonActive = content.trim() !== ''; // Check only content for now
+  const isSendButtonActive = title.trim() !== '' && content.trim() !== '';
   const sendButtonBackgroundColor = isSendButtonActive ? '#A17E66' : '#D5D5D5';
 
   return (

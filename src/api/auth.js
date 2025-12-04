@@ -24,6 +24,17 @@ export const signup = async (name, email, password) => {
   return response.json();
 };
 
+// Get user information by userId
+export const getUserById = async (userId) => {
+  const response = await fetch(`${apiUrl}/api/users/${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.json();
+};
+
 // A mock function to simulate a logout API call
 export const logout = async () => {
   console.log('Logging out');

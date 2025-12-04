@@ -5,27 +5,36 @@ import ReceivedQuizList from './ReceivedQuizList';
 import CreatedQuizList from './CreatedQuizList';
 import { getQuizzes } from '../../api/quiz'; // Import real API
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
-import { quizData } from '../../data/quizData'; // Keep mock data for received quizzes for now
 
 const DailyQuizPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('received');
   const [showOnlyNew, setShowOnlyNew] = useState(false);
-  const [createdQuizzes, setCreatedQuizzes] = useState([]);
+  const [allQuizzes, setAllQuizzes] = useState([]);
 
   useEffect(() => {
     if (user && user.id) {
       const fetchQuizzes = async () => {
         const quizzes = await getQuizzes(user.id);
-        setCreatedQuizzes(quizzes);
+        setAllQuizzes(quizzes);
       };
-      // Fetch created quizzes when the component mounts or user changes
+      // Fetch all quizzes for the matching when the component mounts or user changes
       fetchQuizzes();
     }
   }, [user]);
 
-  const hasNewQuiz = useMemo(() => quizData.some(quiz => quiz.isNew), []);
+  const createdQuizzes = useMemo(() => {
+    if (!user || !user.id) return [];
+    return allQuizzes.filter(quiz => quiz.creator_id === user.id);
+  }, [allQuizzes, user]);
+
+  const receivedQuizzes = useMemo(() => {
+    if (!user || !user.id) return [];
+    return allQuizzes.filter(quiz => quiz.creator_id !== user.id);
+  }, [allQuizzes, user]);
+
+  const hasNewQuiz = useMemo(() => receivedQuizzes.some(quiz => quiz.isNew), [receivedQuizzes]);
 
   const handleCreateQuizClick = () => {
     navigate('/create-quiz');
@@ -43,11 +52,11 @@ const DailyQuizPage = () => {
 
   const displayedReceivedQuizzes = useMemo(() => {
     if (showOnlyNew) {
-      const firstNewQuiz = quizData.find(q => q.isNew);
+      const firstNewQuiz = receivedQuizzes.find(q => q.isNew);
       return firstNewQuiz ? [firstNewQuiz] : [];
     }
-    return quizData;
-  }, [showOnlyNew]);
+    return receivedQuizzes;
+  }, [showOnlyNew, receivedQuizzes]);
 
   return (
     <div style={{height: 844, position: 'relative', background: 'white', display: 'flex', flexDirection: 'column'}}>

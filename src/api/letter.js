@@ -22,7 +22,7 @@ export const getLetters = async (userId) => {
 
 /**
  * 새로운 편지를 서버에 전송합니다.
- * @param {object} letterData - { content: "편지 내용" } 형태의 객체
+ * @param {object} letterData - { title: "편지 제목", content: "편지 내용" } 형태의 객체
  * @param {number} userId - 편지를 보내는 사용자의 ID
  * @returns {Promise<object>} API 응답 객체
  */
@@ -36,6 +36,7 @@ export const sendLetter = async (letterData, userId) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      title: letterData.title,
       content: letterData.content,
       userId: userId // 중요: 보안에 취약하므로 추후 인증 토큰 방식으로 변경해야 합니다.
     }),

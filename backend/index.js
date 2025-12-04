@@ -35,7 +35,7 @@ const pool = mysql.createPool({
 async function initializeDatabase() {
   let connection;
   try {
-    console.log('Checking database schema...');
+    console.log('Checking database schema…');
     connection = await pool.getConnection();
 
     // users 테이블 존재 확인
@@ -54,7 +54,7 @@ async function initializeDatabase() {
       const statements = schema
         .split(';')
         .map(stmt => stmt.trim())
-        .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('/*'));
+        .filter(stmt => stmt.length > 0 && !stmt.startsWith('—') && !stmt.startsWith('/*'));
 
       for (const statement of statements) {
         if (statement.includes('DROP TABLE') ||
@@ -220,15 +220,56 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// 사용자 정보 조회 API 엔드포인트 (userId로 조회)
+app.get('/api/users/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'User ID is required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // userId로 사용자 찾기
+    const [users] = await connection.execute(
+      'SELECT id, name, email, user_code, matching_id, created_at FROM users WHERE id = ?',
+      [userId]
+    );
+    connection.release();
+
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const user = users[0];
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        user_code: user.user_code,
+        matching_id: user.matching_id,
+        created_at: user.created_at,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ success: false, message: 'Server error while fetching user.' });
+  }
+});
+
 // 느린 편지 생성 API 엔드포인트
 app.post('/api/letters', async (req, res) => {
-  const { content, userId } = req.body;
+  const { title, content, userId } = req.body;
 
   // 중요: 실제 프로덕션 환경에서는 요청 본문(body)에서 userId를 직접 받는 것은 매우 위험합니다.
   // 이 userId는 인증 토큰(JWT 등)을 통해 서버에서 직접 추출해야 안전합니다.
   // 현재 구조상 임시로 이 방법을 사용합니다.
-  if (!content || !userId) {
-    return res.status(400).json({ success: false, message: 'Content and userId are required.' });
+  if (!title || !content || !userId) {
+    return res.status(400).json({ success: false, message: 'Title, content, and userId are required.' });
   }
 
   try {
@@ -258,8 +299,8 @@ app.post('/api/letters', async (req, res) => {
     }
 
     const [result] = await connection.execute(
-      'INSERT INTO slow_letters (user_id, content, matching_id) VALUES (?, ?, ?)',
-      [userId, content, matchingId]
+      'INSERT INTO slow_letters (user_id, title, content, matching_id) VALUES (?, ?, ?, ?)',
+      [userId, title, content, matchingId]
     );
     connection.release();
     res

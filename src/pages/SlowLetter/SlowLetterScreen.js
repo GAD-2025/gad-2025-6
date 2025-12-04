@@ -30,18 +30,27 @@ const SlowLetterScreen = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const [sentLetters, setSentLetters] = useState([]);
-    const [receivedLetters, setReceivedLetters] = useState([]); // Keep for future use
+    const [allLetters, setAllLetters] = useState([]);
 
     useEffect(() => {
         if (user && user.id) {
             const fetchLetters = async () => {
                 const letters = await getLetters(user.id);
-                setSentLetters(letters);
+                setAllLetters(letters);
             };
             fetchLetters();
         }
     }, [user]);
+
+    const sentLetters = useMemo(() => {
+        if (!user || !user.id) return [];
+        return allLetters.filter(letter => letter.user_id === user.id);
+    }, [allLetters, user]);
+
+    const receivedLetters = useMemo(() => {
+        if (!user || !user.id) return [];
+        return allLetters.filter(letter => letter.user_id !== user.id);
+    }, [allLetters, user]);
 
     const handleCardClick = (letter) => {
         navigate(`/slow-letter/${letter.id}`, { state: { letter } });
@@ -79,7 +88,8 @@ const SlowLetterScreen = () => {
                     const backgroundColor = getCardColor(originalIndex);
                     return (
                       <div key={letter.id} onClick={() => handleCardClick(letter)} style={{width: 169, height: 190, position: 'relative', background: backgroundColor, overflow: 'hidden', borderRadius: 16, cursor: 'pointer'}}>
-                          <div style={{width: 138, height: 97, left: 15, top: 22, position: 'absolute', color: '#444444', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '400', wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical'}}>{letter.content}</div>
+                          <div style={{width: 138, left: 15, top: 22, position: 'absolute', color: '#000000', fontSize: 18, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{letter.title}</div>
+                          <div style={{width: 138, height: 70, left: 15, top: 50, position: 'absolute', color: '#444444', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '400', wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical'}}>{letter.content}</div>
                           <div style={{width: 138, left: 15, top: 156, position: 'absolute', textAlign: 'right', color: '#979797', fontSize: 10, fontFamily: 'Pretendard Variable', fontWeight: '700', wordWrap: 'break-word'}}>{formatDate(letter.created_at)}</div>
                       </div>
                     );
@@ -92,7 +102,8 @@ const SlowLetterScreen = () => {
                     const backgroundColor = getCardColor(originalIndex);
                     return (
                       <div key={letter.id} onClick={() => handleCardClick(letter)} style={{width: 169, height: 190, position: 'relative', background: backgroundColor, overflow: 'hidden', borderRadius: 16, cursor: 'pointer'}}>
-                          <div style={{width: 138, height: 97, left: 15, top: 22, position: 'absolute', color: '#444444', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '400', wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical'}}>{letter.content}</div>
+                          <div style={{width: 138, left: 15, top: 22, position: 'absolute', color: '#000000', fontSize: 18, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{letter.title}</div>
+                          <div style={{width: 138, height: 70, left: 15, top: 50, position: 'absolute', color: '#444444', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '400', wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical'}}>{letter.content}</div>
                           <div style={{width: 138, left: 15, top: 156, position: 'absolute', textAlign: 'right', color: '#979797', fontSize: 10, fontFamily: 'Pretendard Variable', fontWeight: '700', wordWrap: 'break-word'}}>{formatDate(letter.created_at)}</div>
                       </div>
                     );

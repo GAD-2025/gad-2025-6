@@ -9,6 +9,10 @@ const splitIntoColumns = (data) => {
 };
 
 const ReceivedQuizList = ({ quizData, obscureTitles }) => {
+  if (!quizData || quizData.length === 0) {
+    return null;
+  }
+
   const [column1, column2] = splitIntoColumns(quizData);
 
   return (

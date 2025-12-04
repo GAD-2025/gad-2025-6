@@ -57,6 +57,7 @@ ADD CONSTRAINT `fk_users_matching`
 CREATE TABLE `slow_letters` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `user_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
   `content` TEXT NOT NULL,
   `matching_id` INT NULL,
   `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
