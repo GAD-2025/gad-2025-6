@@ -1,27 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { quizData, createdQuizData } from '../../data/quizData';
 import QuizSubmitModal from '../../components/common/QuizSubmitModal';
 import CorrectAnswerModal from '../../components/common/CorrectAnswerModal';
 import IncorrectAnswerModal from '../../components/common/IncorrectAnswerModal';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
 
 const QuizDetailPage = () => {
   const navigate = useNavigate();
-  const { quizId } = useParams();
   const location = useLocation();
-  const quizFromState = location.state?.quiz;
+  const { user } = useAuth(); // Get user context
+  const quiz = location.state?.quiz;
 
   const [answer, setAnswer] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
 
-  const allQuizzes = [...quizData, ...createdQuizData];
-  const quiz = quizFromState || allQuizzes.find(q => q.id === parseInt(quizId));
-
   if (!quiz) {
     return <div>Quiz not found!</div>;
   }
+
+  const isCreator = user && user.id === quiz.creator_id;
 
   const handleBackClick = () => {
     navigate(-1);
@@ -33,7 +32,7 @@ const QuizDetailPage = () => {
 
   const handleConfirmSubmit = () => {
     setShowModal(false);
-    if (answer.trim().toLowerCase() === quiz.title.toLowerCase()) {
+    if (answer.trim().toLowerCase() === quiz.answer.toLowerCase()) {
       setShowCorrectModal(true);
     } else {
       setShowIncorrectModal(true);
@@ -109,26 +108,28 @@ const QuizDetailPage = () => {
         <div data-property-1="Default" style={{height: 422, padding: 24, background: '#FFF8E2', boxShadow: '0px 4px 10px 4px rgba(0, 0, 0, 0.04)', overflow: 'hidden', borderRadius: 16, display: 'flex', width: 350, boxSizing: 'border-box'}}>
           <div style={{width: '100%', alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', display: 'inline-flex'}}>
             <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24, display: 'flex'}}>
-              {quiz.isNew ? (
+              {isCreator ? (
+                // If user is the creator, show the question as text
+                <div style={{alignSelf: 'stretch', color: '#444444', fontSize: 36, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.question}</div>
+              ) : (
+                // If user is not the creator, show the input field
                 <input
                   type="text"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="Enter the word"
+                  placeholder="Enter the answer"
                   style={inputStyle}
                 />
-              ) : (
-                <div style={{alignSelf: 'stretch', color: '#444444', fontSize: 36, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.title}</div>
               )}
-              <div style={{alignSelf: 'stretch', color: '#979797', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.description}</div>
+              <div style={{alignSelf: 'stretch', color: '#979797', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.question}</div>
             </div>
-            <div style={{alignSelf: 'stretch', textAlign: 'right', color: '#979797', fontSize: 19.93, fontFamily: 'Pretendard Variable', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.date}</div>
+            <div style={{alignSelf: 'stretch', textAlign: 'right', color: '#979797', fontSize: 19.93, fontFamily: 'Pretendard Variable', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.created_at}</div>
           </div>
         </div>
         
         {/* Send Button */}
         <div style={{ width: '100%', marginTop: 170 }}>
-          {quiz.isNew && (
+          {!isCreator && ( // Only show the send button if the user is not the creator
             <button
               style={isButtonDisabled ? buttonDisabledStyle : buttonEnabledStyle}
               disabled={isButtonDisabled}
@@ -161,5 +162,4 @@ const QuizDetailPage = () => {
     </div>
   );
 };
-
 export default QuizDetailPage;

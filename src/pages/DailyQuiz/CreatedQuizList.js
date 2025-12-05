@@ -16,13 +16,13 @@ const CreatedQuizList = ({ quizData }) => {
       {/* Column 1 */}
       <div style={{width: 169, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'inline-flex'}}>
         {column1.map((item, index) => (
-          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 === 0} />
+          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 === 0} showAnswer={true} />
         ))}
       </div>
       {/* Column 2 */}
       <div style={{width: 169, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'inline-flex'}}>
         {column2.map((item, index) => (
-          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 !== 0} />
+          <QuizCard key={item.id} quiz={item} isHighlighted={index % 2 !== 0} showAnswer={true} />
         ))}
       </div>
     </div>

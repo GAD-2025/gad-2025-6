@@ -8,7 +8,7 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 };
 
-const QuizCard = ({ quiz, isHighlighted, obscureTitle }) => {
+const QuizCard = ({ quiz, isHighlighted, obscureTitle, showAnswer }) => {
   const navigate = useNavigate();
 
   // Add null check for quiz
@@ -46,6 +46,11 @@ const QuizCard = ({ quiz, isHighlighted, obscureTitle }) => {
     >
       <div style={{width: 138, height: 120, flexDirection: 'column', justifyContent: 'space-between', display: 'inline-flex'}}>
         <div style={{alignSelf: 'stretch', color: '#444444', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{displayQuestion}</div>
+        {showAnswer && (
+          <div style={{alignSelf: 'stretch', color: '#84AF25', fontSize: 16, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word', marginTop: 10}}>
+            Answer: {quiz.answer}
+          </div>
+        )}
         <div style={{alignSelf: 'stretch', textAlign: 'right', color: '#979797', fontSize: 10, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{formatDate(quiz.created_at)}</div>
       </div>
     </div>
