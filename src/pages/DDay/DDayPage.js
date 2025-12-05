@@ -5,16 +5,18 @@ import BottomNav from '../../components/layout/BottomNav';
 import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
 import { getDdaysByMatchingId } from '../../api/dday';
 import { getBucketListsByMatchingId, updateBucketList } from '../../api/bucketlist';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
 
 const DDayPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Use useAuth hook
   const [activeTab, setActiveTab] = useState('dday');
   const [bucketList, setBucketList] = useState([]);
   const [ddayList, setDdayList] = useState([]);
 
   const fetchData = useCallback(async () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const matchingId = user.matching_id;
+    // const user = JSON.parse(localStorage.getItem('user')); // Removed direct localStorage access
+    const matchingId = user?.matching_id; // Get matching_id from user context
 
     try {
       if (activeTab === 'dday') {
@@ -39,7 +41,7 @@ const DDayPage = () => {
     } catch (error) {
       console.error(`Failed to fetch ${activeTab}:`, error);
     }
-  }, [activeTab]);
+  }, [activeTab, user]); // Added user to dependencies
 
   useEffect(() => {
     fetchData();
@@ -63,7 +65,7 @@ const DDayPage = () => {
 
   const handleToggleComplete = async (id, currentStatus) => {
     try {
-      await updateBucketList(id, !currentStatus);
+      await updateBucketList(id, { is_completed: !currentStatus }); // Pass an object
       fetchData(); // Re-fetch the list to update UI
     } catch (error) {
       console.error('Failed to update bucket list item status:', error);
@@ -142,7 +144,7 @@ const DDayPage = () => {
         ) : (
           <BucketListContainer>
             {bucketList.map((item) => (
-              <BucketListItemWrapper key={item.id}>
+              <BucketListItemWrapper key={item.id} onClick={() => handleBucketListItemClick(item)}>
                 <BucketListItemBar completed={item.is_completed} />
                 <BucketListItemContent completed={item.is_completed}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5.07px' }}>
@@ -162,7 +164,7 @@ const DDayPage = () => {
                         <EmptyCheckbox />
                       )}
                     </div>
-                    <BucketListItemInfo onClick={() => handleBucketListItemClick(item)}>
+                    <BucketListItemInfo>
                       <BucketListItemText completed={item.is_completed}>
                         {item.title}
                       </BucketListItemText>

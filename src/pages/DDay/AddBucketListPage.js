@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { createBucketList } from '../../api/bucketlist';
 import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
 
 function AddBucketListPage() {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Use useAuth hook
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
@@ -16,18 +18,14 @@ function AddBucketListPage() {
   };
 
   const handleSave = async () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const userId = user.id;
-    const matchingId = user.matching_id;
-
-    if (!matchingId) {
-      alert('You need to be matched with someone to create a bucket list.');
+    if (!user || !user.id || !user.matching_id) {
+      alert('User not authenticated or not matched.');
       return;
     }
 
     const bucketListData = {
-      userId,
-      matchingId,
+      userId: user.id,
+      matchingId: user.matching_id,
       title,
       content,
     };

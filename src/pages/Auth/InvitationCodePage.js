@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { login as apiLogin } from '../../api/auth';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth hook from AuthContext
 
 const InvitationCodePage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { refreshUser } = useAuth(); // Get refreshUser function from AuthContext
   const [opponentCode, setOpponentCode] = useState('');
 
   const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -21,8 +20,6 @@ const InvitationCodePage = () => {
 
   const handleConnectClick = async () => {
     const userId = storedUser.id;
-    const userEmail = storedUser.email;
-    const userPassword = storedUser.password;
 
     try {
       const result = await fetch(`${process.env.REACT_APP_API_URL}/api/matching`, {
@@ -37,17 +34,8 @@ const InvitationCodePage = () => {
       });
 
       if (result.ok) {
-        // 매칭 성공 후 login 요청을 보내서 matching_id를 fetching
-        if (userEmail && userPassword) {
-          try {
-            const loginResult = await apiLogin(userEmail, userPassword);
-            if (loginResult.success && loginResult.user) {
-              login(loginResult.user);
-            }
-          } catch (error) {
-            console.error('Failed to fetch updated matching_id:', error);
-          }
-        }
+        // 매칭 성공 후 user 정보를 새로고침하여 matching_id를 가져옴
+        await refreshUser(userId);
         navigate('/onboarding');
       } else {
         const errorData = await result.json();

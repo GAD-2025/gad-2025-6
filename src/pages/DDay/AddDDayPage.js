@@ -4,9 +4,11 @@ import styled from 'styled-components';
 import { createDday } from '../../api/dday';
 import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/day-default.svg'; // Assuming this is the arrow left icon
 import { ReactComponent as CalendarIcon } from '../../assets/icons/quiz-active.svg';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
 
 function AddDDayPage() {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Use useAuth hook
   const [eventName, setEventName] = useState('');
   const [content, setContent] = useState('');
   const [targetDate, setTargetDate] = useState('');
@@ -33,16 +35,17 @@ function AddDDayPage() {
       return;
     }
 
-    // TODO: Replace with actual user ID from auth context
-    const userId = JSON.parse(localStorage.getItem('user')).id;
-    const matchingId = JSON.parse(localStorage.getItem('user')).matching_id;
+    if (!user || !user.id || !user.matching_id) {
+      alert('User not authenticated or not matched.');
+      return;
+    }
 
     const ddayData = {
-      userId,
+      userId: user.id,
       title: eventName,
       date: rawDate,
       content,
-      matchingId,
+      matchingId: user.matching_id,
     };
 
     try {

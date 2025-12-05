@@ -1,11 +1,41 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
+import { getUserById } from '../../api/auth'; // Import getUserById from auth API
 
 const WaitingForPartnerPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const myCode = location.state?.myCode || '...'; // Get code from route state
+  const { user, refreshUser } = useAuth(); // Get user and refreshUser from AuthContext
+  const myCode = location.state?.myCode || (user ? user.user_code : '...'); // Use user.user_code if available
+
+  useEffect(() => {
+    if (!user || !user.id) {
+      // If user is not logged in or user ID is not available, navigate to sign-in
+      navigate('/signin');
+      return;
+    }
+
+    const checkMatchingStatus = async () => {
+      try {
+        const response = await getUserById(user.id); // Using getUserById to refresh user data
+        if (response.success && response.user && response.user.matching_id) {
+          // If a matching_id is found, update the context and navigate
+          refreshUser(user.id); // Ensure the latest user data with matching_id is in context
+          navigate('/onboarding'); // Navigate to onboarding or home
+        }
+      } catch (error) {
+        console.error('Error checking matching status:', error);
+      }
+    };
+
+    // Poll every 5 seconds
+    const intervalId = setInterval(checkMatchingStatus, 5000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [user, navigate, refreshUser]);
 
   const handleGoBack = () => {
     navigate(-1); // Go back to the previous page

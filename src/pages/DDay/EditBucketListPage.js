@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { bucketListData } from '../../data/bucketListData';
+import { getBucketListById, updateBucketList } from '../../api/bucketlist'; // Import getBucketListById and updateBucketList
+import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg'; // Assuming this is the arrow left icon
 
 const PageContainer = styled.div`
   width: 100%;
@@ -92,20 +93,15 @@ const TopBarDefault = styled.div`
   overflow: hidden;
 `;
 
-const ArrowLeftIcon = styled.div`
+const StyledArrowLeftIcon = styled(ArrowLeftIcon)` // Use StyledArrowLeftIcon as a component
   width: 24px;
   height: 24px;
   left: 20px;
   top: 10.50px;
   position: absolute;
   cursor: pointer;
-  & > div {
-    width: 20px;
-    height: 13px;
-    left: 2px;
-    top: 5.50px;
-    position: absolute;
-    background: var(--Grayscale-900, #1A1B1E);
+  path {
+    fill: var(--Grayscale-900, #1A1B1E); // Ensure the icon color is correct
   }
 `;
 
@@ -258,29 +254,77 @@ function EditBucketListPage() {
   const location = useLocation();
 
   const [title, setTitle] = useState('');
-  const [targetDate, setTargetDate] = useState('');
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(''); // Changed from targetDate to description
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const itemToEdit = location.state?.item || bucketListData.find(b => b.id === parseInt(bucketListId));
-    if (itemToEdit) {
-      setTitle(itemToEdit.title);
-      setTargetDate(itemToEdit.date);
-      setDescription(itemToEdit.description || ''); // Initialize description
-    }
-  }, [bucketListId, location.state]);
+    const fetchAndSetBucketList = async () => {
+      let itemToEdit = location.state?.item;
+
+      if (!itemToEdit && bucketListId) {
+        try {
+          const response = await getBucketListById(bucketListId);
+          if (response.success) {
+            itemToEdit = response.bucketlist;
+          } else {
+            setError(response.message || 'Failed to fetch Bucket List for editing.');
+          }
+        } catch (err) {
+          setError('An error occurred while fetching Bucket List for editing.');
+          console.error("Error fetching Bucket List for edit:", err);
+        }
+      }
+
+      if (itemToEdit) {
+        setTitle(itemToEdit.title);
+        setDescription(itemToEdit.content || ''); // Use content for description
+      } else if (!error) {
+        setError("Bucket List not found for editing.");
+      }
+      setLoading(false);
+    };
+    fetchAndSetBucketList();
+  }, [bucketListId, location.state, error]);
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  const handleSave = () => {
-    // In a real app, you would dispatch an action to update the data
-    // For now, we will just navigate back.
-    navigate('/dday');
+  const handleSave = async () => {
+    if (!title.trim() || !description.trim()) {
+        alert('Title and description cannot be empty.');
+        return;
+    }
+    try {
+      const bucketListUpdateData = {
+        title,
+        content: description,
+      };
+
+      const response = await updateBucketList(bucketListId, bucketListUpdateData);
+      if (response.success) {
+        navigate('/dday');
+      } else {
+        alert(`Failed to update Bucket List: ${response.message}`);
+      }
+    } catch (error) {
+      console.error('Failed to update Bucket List:', error);
+      alert('An error occurred while updating Bucket List. Please try again.');
+    }
   };
 
-  const isSaveButtonActive = title.trim() !== '' && targetDate.trim() !== '' && description.trim() !== '';
+  if (loading) {
+    return <div>Loading Bucket List for edit...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!title && !description && !loading) { // Check if no data and not loading
+    return <div>Bucket List not found for editing.</div>;
+  }
 
   return (
     <PageContainer>
@@ -295,65 +339,53 @@ function EditBucketListPage() {
           </StatusBar>
           <TopBar>
             <TopBarDefault>
-              <ArrowLeftIcon onClick={handleBackClick}>
-                <div />
-              </ArrowLeftIcon>
+              <StyledArrowLeftIcon onClick={handleBackClick} /> {/* Use the styled component */}
               <PageTitle>Edit Bucket List Item</PageTitle>
             </TopBarDefault>
-            <FormSection>
-              <InputGroup>
-                <InputLabel>Bucket List Item</InputLabel>
-                <InputField>
-                  <StyledInput
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title of your bucket list item"
-                  />
-                </InputField>
-              </InputGroup>
-              <InputGroup>
-                <InputLabel>Target Date</InputLabel>
-                <InputField>
-                  <StyledInput
-                    type="text"
-                    value={targetDate}
-                    onChange={(e) => setTargetDate(e.target.value)}
-                    placeholder="YYYY.MM.DD"
-                  />
-                  <CalendarIcon />
-                </InputField>
-              </InputGroup>
-              <InputGroup>
-                <InputLabel>Description</InputLabel>
-                <div style={{
-                    width: 350,
-                    paddingTop: 18,
-                    paddingBottom: 18,
-                    paddingLeft: 24,
-                    paddingRight: 24,
-                    background: 'white',
-                    overflow: 'hidden',
-                    borderRadius: 20,
-                    outline: '1px #EAEAEA solid',
-                    outlineOffset: '-1px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxSizing: 'border-box'
-                }}>
-                  <StyledTextArea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Description of your bucket list item"
-                  />
-                </div>
-              </InputGroup>
-              <SaveButton active={isSaveButtonActive} onClick={handleSave}>
-                <SaveButtonText>Save</SaveButtonText>
-              </SaveButton>
-            </FormSection>
           </TopBar>
         </HeaderSection>
+        <FormSection style={{ paddingLeft: 20, paddingRight: 20 }}>
+          <InputGroup>
+            <InputLabel>Bucket List Item</InputLabel>
+            <InputField>
+              <StyledInput
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Title of your bucket list item"
+              />
+            </InputField>
+          </InputGroup>
+          <InputGroup>
+            <InputLabel>Description</InputLabel>
+            <div style={{
+                width: 350,
+                paddingTop: 18,
+                paddingBottom: 18,
+                paddingLeft: 24,
+                paddingRight: 24,
+                background: 'white',
+                overflow: 'hidden',
+                borderRadius: 20,
+                outline: '1px #EAEAEA solid',
+                outlineOffset: '-1px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxSizing: 'border-box'
+            }}>
+              <StyledTextArea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description of your bucket list item"
+              />
+            </div>
+          </InputGroup>
+          {/* Removed Target Date Input Group as it's not supported by API */}
+
+          <SaveButton active onClick={handleSave}>
+            <SaveButtonText>Save</SaveButtonText>
+          </SaveButton>
+        </FormSection>
         <BottomBar>
           <BottomBarIndicator />
         </BottomBar>

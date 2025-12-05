@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ddayData } from '../../data/ddayData';
-import { updateDday } from '../../api/dday';
+import { useNavigate, useParams } from 'react-router-dom'; // Removed useLocation
+import { updateDday, getDdayById } from '../../api/dday'; // Import getDdayById
+import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg'; // Corrected import for ArrowLeftIcon
 
 const PageContainer = styled.div`
   width: 100%;
@@ -93,23 +93,6 @@ const TopBarDefault = styled.div`
   overflow: hidden;
 `;
 
-const ArrowLeftIcon = styled.div`
-  width: 24px;
-  height: 24px;
-  left: 20px;
-  top: 10.5px;
-  position: absolute;
-  cursor: pointer;
-  & > div {
-    width: 20px;
-    height: 13px;
-    left: 2px;
-    top: 5.5px;
-    position: absolute;
-    background: var(--Grayscale-900, #1a1b1e);
-  }
-`;
-
 const PageTitle = styled.div`
   left: 122px;
   top: 10px;
@@ -186,6 +169,7 @@ const StyledTextArea = styled.textarea`
   width: 100%;
   flex-grow: 1;
   min-height: 100px;
+  padding: 18px;
   color: #2c2c2c;
   font-size: 16px;
   font-family: Pretendard;
@@ -257,20 +241,40 @@ const BottomBarIndicator = styled.div`
 function EditDDayPage() {
   const navigate = useNavigate();
   const { ddayId } = useParams();
-  const location = useLocation();
 
   const [title, setTitle] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const itemToEdit = location.state?.item || ddayData.find((d) => d.id === parseInt(ddayId));
-    if (itemToEdit) {
-      setTitle(itemToEdit.title);
-      setTargetDate(itemToEdit.date);
-      setDescription(itemToEdit.content);
-    }
-  }, [ddayId, location.state]);
+    const fetchAndSetDday = async () => {
+      if (!ddayId) {
+        setError("D-day ID is missing.");
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const response = await getDdayById(ddayId);
+        if (response.success) {
+          const itemToEdit = response.dday;
+          setTitle(itemToEdit.title);
+          setTargetDate(itemToEdit.date.split('T')[0]);
+          setDescription(itemToEdit.content);
+        } else {
+          setError(response.message || 'Failed to fetch D-day for editing.');
+        }
+      } catch (err) {
+        setError('An error occurred while fetching D-day for editing.');
+        console.error("Error fetching D-day for edit:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAndSetDday();
+  }, [ddayId]); // Removed location from dependencies
 
   const handleBackClick = () => {
     navigate(-1);
@@ -280,19 +284,24 @@ function EditDDayPage() {
     try {
       const ddayUpdateData = {
         title,
-        date: targetDate,
+        date: targetDate, // targetDate is already in YYYY-MM-DD format from input
         content: description,
       };
 
-      await updateDday(ddayId, ddayUpdateData);
-      navigate('/dday');
+      const response = await updateDday(ddayId, ddayUpdateData);
+      if (response.success) {
+        navigate('/dday');
+      } else {
+        alert(`Failed to update D-Day: ${response.message}`);
+      }
     } catch (error) {
       console.error('Failed to update D-Day:', error);
-      alert('Failed to update D-Day. Please try again.');
+      alert('An error occurred while updating D-Day. Please try again.');
     }
   };
 
   const renderDateFormat = (dateStr) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -300,73 +309,81 @@ function EditDDayPage() {
     return `${year}-${month}-${day}`;
   };
 
+  if (loading) {
+    return <div>Loading D-day for edit...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <PageContainer>
       <ContentWrapper>
         <HeaderSection>
           <TopBar>
             <TopBarDefault>
-              <ArrowLeftIcon onClick={handleBackClick}>
-                <div />
-              </ArrowLeftIcon>
+              <div onClick={handleBackClick} style={{width: 24, height: 24, left: 20, top: 10.5, position: 'absolute', cursor: 'pointer'}}>
+                <ArrowLeftIcon />
+              </div>
               <PageTitle>Edit D-Day</PageTitle>
             </TopBarDefault>
-            <FormSection>
-              <InputGroup>
-                <InputLabel>Event Name</InputLabel>
-                <InputField>
-                  <StyledInput
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title of your event"
-                  />
-                </InputField>
-              </InputGroup>
-              <InputGroup>
-                <InputLabel>Description</InputLabel>
-                <div
-                  style={{
-                    width: 350,
-                    paddingTop: 18,
-                    paddingBottom: 18,
-                    paddingLeft: 24,
-                    paddingRight: 24,
-                    background: 'white',
-                    overflow: 'hidden',
-                    borderRadius: 20,
-                    outline: '1px #EAEAEA solid',
-                    outlineOffset: '-1px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <StyledTextArea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Description of your event"
-                  />
-                </div>
-              </InputGroup>
-              <InputGroup>
-                <InputLabel>Target Date</InputLabel>
-                <InputField>
-                  <StyledInput
-                    type="date"
-                    value={renderDateFormat(targetDate)}
-                    onChange={(e) => setTargetDate(e.target.value)}
-                    placeholder="YYYY-MM-DD"
-                  />
-                </InputField>
-              </InputGroup>
-
-              <SaveButton active onClick={handleSave}>
-                <SaveButtonText>Save</SaveButtonText>
-              </SaveButton>
-            </FormSection>
           </TopBar>
         </HeaderSection>
+        <FormSection style={{ paddingLeft: 20, paddingRight: 20 }}>
+          <InputGroup>
+            <InputLabel>Event Name</InputLabel>
+            <InputField>
+              <StyledInput
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Title of your event"
+              />
+            </InputField>
+          </InputGroup>
+          <InputGroup>
+            <InputLabel>Description</InputLabel>
+            <div
+              style={{
+                width: 350,
+                paddingTop: 18,
+                paddingBottom: 18,
+                paddingLeft: 24,
+                paddingRight: 24,
+                background: 'white',
+                overflow: 'hidden',
+                borderRadius: 20,
+                outline: '1px #EAEAEA solid',
+                outlineOffset: '-1px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxSizing: 'border-box',
+              }}
+            >
+              <StyledTextArea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description of your event"
+              />
+            </div>
+          </InputGroup>
+          <InputGroup>
+            <InputLabel>Target Date</InputLabel>
+            <InputField>
+              <StyledInput
+                type="date"
+                value={targetDate} // Use targetDate directly
+                onChange={(e) => setTargetDate(e.target.value)}
+                placeholder="YYYY-MM-DD"
+              />
+            </InputField>
+          </InputGroup>
+
+          <SaveButton active onClick={handleSave}>
+            <SaveButtonText>Save</SaveButtonText>
+          </SaveButton>
+        </FormSection>
         <BottomBar>
           <BottomBarIndicator />
         </BottomBar>

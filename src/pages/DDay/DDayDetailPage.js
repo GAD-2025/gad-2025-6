@@ -1,19 +1,39 @@
-import React from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ddayData } from '../../data/ddayData';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getDdayById, deleteDday } from '../../api/dday'; // Import real API calls
 import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg';
 
 const DDayDetailPage = () => {
   const navigate = useNavigate();
   const { ddayId } = useParams();
-  const location = useLocation();
-  const itemFromState = location.state?.item;
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const item = itemFromState || ddayData.find((d) => d.id === parseInt(ddayId));
-
-  if (!item) {
-    return <div>D-day not found!</div>;
-  }
+  useEffect(() => {
+    const fetchDday = async () => {
+      if (!ddayId) {
+        setError("D-day ID is missing.");
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const response = await getDdayById(ddayId);
+        if (response.success) {
+          setItem(response.dday);
+        } else {
+          setError(response.message || 'Failed to fetch D-day details.');
+        }
+      } catch (err) {
+        setError('An error occurred while fetching D-day details.');
+        console.error("Error fetching D-day:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDday();
+  }, [ddayId]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -23,9 +43,28 @@ const DDayDetailPage = () => {
     navigate(`/dday/edit/${item.id}`, { state: { item } });
   };
 
+  const handleDeleteClick = async () => {
+    if (window.confirm('Are you sure you want to delete this D-day event?')) {
+      try {
+        const response = await deleteDday(item.id);
+        if (response.success) {
+          alert('D-day event deleted successfully!');
+          navigate('/dday'); // Navigate back to the list
+        } else {
+          alert(`Failed to delete D-day event: ${response.message}`);
+        }
+      } catch (err) {
+        console.error("Error deleting D-day:", err);
+        alert('An error occurred while deleting the D-day event.');
+      }
+    }
+  };
+
   const renderDDay = (day) => {
     const today = new Date();
     const targetDate = new Date(day.date);
+    today.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
     const timeDiff = targetDate - today;
     const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
@@ -37,6 +76,18 @@ const DDayDetailPage = () => {
       return 'D-Day';
     }
   };
+
+  if (loading) {
+    return <div>Loading D-day details...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!item) {
+    return <div>D-day not found.</div>;
+  }
 
   return (
     <div
@@ -80,7 +131,7 @@ const DDayDetailPage = () => {
               display: 'flex',
             }}
           >
-            {/* Header with Back Button and Edit Button */}
+            {/* Header with Back Button, Edit Button and Delete Button */}
             <div
               data-property-1="Variant4"
               style={{
@@ -90,18 +141,18 @@ const DDayDetailPage = () => {
                 overflow: 'hidden',
                 marginTop: 24,
                 display: 'flex',
-                justifyContent: 'center',
+                justifyContent: 'space-between', // Changed to space-between
                 alignItems: 'center',
+                padding: '0 20px', // Added padding
               }}
             >
               <div
                 data-property-1="icon_arrow_left"
                 onClick={handleBackClick}
                 style={{
-                  position: 'absolute',
-                  left: '24px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  position: 'absolute', // Make it absolute
+                  left: '20px', // Position from left
                 }}
               >
                 <ArrowLeftIcon />
@@ -115,21 +166,31 @@ const DDayDetailPage = () => {
               >
                 D-Day
               </div>
-              <div
-                onClick={handleEditClick}
-                style={{
-                  position: 'absolute',
-                  right: 20,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  cursor: 'pointer',
-                  color: '#84AF25',
-                  fontSize: 16,
-                  fontFamily: 'Pretendard',
-                  fontWeight: '700',
-                }}
-              >
-                Edit
+              <div style={{ display: 'flex', gap: '15px' }}> {/* Container for Edit and Delete */}
+                <div
+                  onClick={handleEditClick}
+                  style={{
+                    cursor: 'pointer',
+                    color: '#84AF25',
+                    fontSize: 16,
+                    fontFamily: 'Pretendard',
+                    fontWeight: '700',
+                  }}
+                >
+                  Edit
+                </div>
+                <div
+                  onClick={handleDeleteClick}
+                  style={{
+                    cursor: 'pointer',
+                    color: '#FF4D4D', // Red color for delete
+                    fontSize: 16,
+                    fontFamily: 'Pretendard',
+                    fontWeight: '700',
+                  }}
+                >
+                  Delete
+                </div>
               </div>
             </div>
           </div>

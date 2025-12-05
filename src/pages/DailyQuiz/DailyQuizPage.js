@@ -10,7 +10,6 @@ const DailyQuizPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('received');
-  const [showOnlyNew, setShowOnlyNew] = useState(false);
   const [allQuizzes, setAllQuizzes] = useState([]);
 
   useEffect(() => {
@@ -34,29 +33,13 @@ const DailyQuizPage = () => {
     return allQuizzes.filter(quiz => quiz.creator_id !== user.id);
   }, [allQuizzes, user]);
 
-  const hasNewQuiz = useMemo(() => receivedQuizzes.some(quiz => quiz.isNew), [receivedQuizzes]);
-
   const handleCreateQuizClick = () => {
     navigate('/create-quiz');
   };
 
   const handleReceivedClick = () => {
     setActiveTab('received');
-    setShowOnlyNew(false);
   };
-
-  const handleReceivedDoubleClick = () => {
-    setActiveTab('received');
-    setShowOnlyNew(true);
-  };
-
-  const displayedReceivedQuizzes = useMemo(() => {
-    if (showOnlyNew) {
-      const firstNewQuiz = receivedQuizzes.find(q => q.isNew);
-      return firstNewQuiz ? [firstNewQuiz] : [];
-    }
-    return receivedQuizzes;
-  }, [showOnlyNew, receivedQuizzes]);
 
   return (
     <div style={{height: 844, position: 'relative', background: 'white', display: 'flex', flexDirection: 'column'}}>
@@ -77,11 +60,9 @@ const DailyQuizPage = () => {
             cursor: 'pointer'
           }}
           onClick={handleReceivedClick}
-          onDoubleClick={handleReceivedDoubleClick}
         >
           <div style={{textAlign: 'center', color: activeTab === 'received' ? '#FFC90F' : '#9E9FAD', fontSize: 16, fontWeight: '700'}}>
             Received
-            {hasNewQuiz && showOnlyNew && <span style={{color: 'red', marginLeft: 4}}>New!</span>}
           </div>
         </div>
         <div
@@ -103,7 +84,7 @@ const DailyQuizPage = () => {
 
       {/* Quiz Card List */}
       {activeTab === 'received' ? (
-        <ReceivedQuizList quizData={displayedReceivedQuizzes} obscureTitles={showOnlyNew} />
+        <ReceivedQuizList quizData={receivedQuizzes} />
       ) : (
         <CreatedQuizList quizData={createdQuizzes} />
       )}

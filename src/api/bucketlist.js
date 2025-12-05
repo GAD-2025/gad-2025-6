@@ -22,16 +22,34 @@ export const createBucketList = async (bucketListData) => {
     return response.json();
 };
 
-export const updateBucketList = async (id, isCompleted) => {
+export const updateBucketList = async (id, bucketListData) => {
     const response = await fetch(`${API_URL}/bucketlist/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isCompleted }),
+        body: JSON.stringify(bucketListData),
     });
     if (!response.ok) {
         throw new Error('Failed to update Bucket List item');
+    }
+    return response.json();
+};
+
+export const getBucketListById = async (id) => {
+    const response = await fetch(`${API_URL}/bucketlist/${id}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch Bucket List item');
+    }
+    return response.json();
+};
+
+export const deleteBucketList = async (id) => {
+    const response = await fetch(`${API_URL}/bucketlist/${id}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) {
+        throw new Error('Failed to delete Bucket List item');
     }
     return response.json();
 };

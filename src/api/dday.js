@@ -43,3 +43,13 @@ export const updateDday = async (id, ddayData) => {
   }
   return response.json();
 };
+
+export const deleteDday = async (id) => {
+  const response = await fetch(`${API_URL}/dday/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete D-Day event');
+  }
+  return response.json();
+};
