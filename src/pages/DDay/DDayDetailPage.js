@@ -2,6 +2,104 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getDdayById, deleteDday } from '../../api/dday'; // Import real API calls
 import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg';
+import styled from 'styled-components';
+import Button from '../../components/common/Button';
+
+const PageWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+`;
+
+const BackButton = styled.button`
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+`;
+
+const TopBarWrapper = styled.div`
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const PageTitle = styled.div`
+  text-align: center;
+  color: black;
+  font-size: 20px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+`;
+
+const DDayCard = styled.div`
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #f4f8ea;
+  border-radius: 16px;
+  background: #f4f8ea;
+  box-shadow: 0 4px 10px 4px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  box-sizing: border-box;
+`;
+
+const DDayInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const DDayTitle = styled.div`
+  text-align: left;
+  color: #444;
+  font-family: Pretendard;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  text-align: left;
+`;
+
+const DDayContent = styled.div`
+  color: #979797;
+  font-family: Pretendard;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  text-align: left;
+`;
+
+const DDayDate = styled.div`
+  width: 100%;
+  color: #979797;
+  text-align: right;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+`;
+
+const ButtonWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 32px;
+`;
 
 const DDayDetailPage = () => {
   const navigate = useNavigate();
@@ -13,7 +111,7 @@ const DDayDetailPage = () => {
   useEffect(() => {
     const fetchDday = async () => {
       if (!ddayId) {
-        setError("D-day ID is missing.");
+        setError('D-day ID is missing.');
         setLoading(false);
         return;
       }
@@ -27,7 +125,7 @@ const DDayDetailPage = () => {
         }
       } catch (err) {
         setError('An error occurred while fetching D-day details.');
-        console.error("Error fetching D-day:", err);
+        console.error('Error fetching D-day:', err);
       } finally {
         setLoading(false);
       }
@@ -54,7 +152,7 @@ const DDayDetailPage = () => {
           alert(`Failed to delete D-day event: ${response.message}`);
         }
       } catch (err) {
-        console.error("Error deleting D-day:", err);
+        console.error('Error deleting D-day:', err);
         alert('An error occurred while deleting the D-day event.');
       }
     }
@@ -90,203 +188,29 @@ const DDayDetailPage = () => {
   }
 
   return (
-    <div
-      style={{
-        width: 390,
-        height: 844,
-        background: '#F9F9F9',
-        overflow: 'hidden',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        gap: 10,
-        display: 'inline-flex',
-      }}
-    >
-      <div
-        style={{
-          width: 390,
-          flexDirection: 'column',
-          justifyContent: 'flex-start',
-          alignItems: 'flex-start',
-          gap: 274,
-          display: 'inline-flex',
-        }}
-      >
-        <div
-          style={{
-            alignSelf: 'stretch',
-            flexDirection: 'column',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            gap: 24,
-            display: 'flex',
-          }}
-        >
-          <div
-            style={{
-              alignSelf: 'stretch',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              display: 'flex',
-            }}
-          >
-            {/* Header with Back Button, Edit Button and Delete Button */}
-            <div
-              data-property-1="Variant4"
-              style={{
-                alignSelf: 'stretch',
-                height: 44,
-                position: 'relative',
-                overflow: 'hidden',
-                marginTop: 24,
-                display: 'flex',
-                justifyContent: 'space-between', // Changed to space-between
-                alignItems: 'center',
-                padding: '0 20px', // Added padding
-              }}
-            >
-              <div
-                data-property-1="icon_arrow_left"
-                onClick={handleBackClick}
-                style={{
-                  cursor: 'pointer',
-                  position: 'absolute', // Make it absolute
-                  left: '20px', // Position from left
-                }}
-              >
-                <ArrowLeftIcon />
-              </div>
-              <div
-                style={{
-                  fontSize: 20,
-                  fontFamily: 'Pretendard',
-                  fontWeight: '700',
-                }}
-              >
-                D-Day
-              </div>
-              <div style={{ display: 'flex', gap: '15px' }}> {/* Container for Edit and Delete */}
-                <div
-                  onClick={handleEditClick}
-                  style={{
-                    cursor: 'pointer',
-                    color: '#84AF25',
-                    fontSize: 16,
-                    fontFamily: 'Pretendard',
-                    fontWeight: '700',
-                  }}
-                >
-                  Edit
-                </div>
-                <div
-                  onClick={handleDeleteClick}
-                  style={{
-                    cursor: 'pointer',
-                    color: '#FF4D4D', // Red color for delete
-                    fontSize: 16,
-                    fontFamily: 'Pretendard',
-                    fontWeight: '700',
-                  }}
-                >
-                  Delete
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* D-Day Item Detail */}
-          <div
-            data-property-1="Default"
-            style={{
-              height: 422,
-              padding: 24,
-              background: '#F4F8EA',
-              boxShadow: '0px 4px 10px 4px rgba(0, 0, 0, 0.04)',
-              overflow: 'hidden',
-              borderRadius: 16,
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: 10,
-              display: 'inline-flex',
-            }}
-          >
-            <div
-              style={{
-                width: 302,
-                alignSelf: 'stretch',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                alignItems: 'flex-end',
-                display: 'inline-flex',
-              }}
-            >
-              <div
-                style={{
-                  alignSelf: 'stretch',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  gap: 24,
-                  display: 'flex',
-                }}
-              >
-                <div
-                  style={{
-                    alignSelf: 'stretch',
-                    color: '#444444',
-                    fontSize: 36,
-                    fontFamily: 'Pretendard',
-                    fontWeight: '700',
-                    wordWrap: 'break-word',
-                  }}
-                >
-                  {item.title}
-                </div>
-                <div
-                  style={{
-                    alignSelf: 'stretch',
-                    color: '#979797',
-                    fontSize: 20,
-                    fontFamily: 'Pretendard',
-                    fontWeight: '400',
-                    wordWrap: 'break-word',
-                  }}
-                >
-                  {item.content}
-                </div>
-              </div>
-              <div
-                style={{
-                  alignSelf: 'stretch',
-                  textAlign: 'right',
-                  color: '#979797',
-                  fontSize: 19.93,
-                  fontFamily: 'Pretendard Variable',
-                  fontWeight: '700',
-                  wordWrap: 'break-word',
-                }}
-              >
-                {renderDDay(item)}
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Home Indicator */}
-        <div style={{ alignSelf: 'stretch', height: 36, position: 'relative' }}>
-          <div
-            style={{
-              width: 134,
-              height: 5,
-              left: 128,
-              top: 23,
-              position: 'absolute',
-              background: 'black',
-              borderRadius: 100,
-            }}
-          />
-        </div>
-      </div>
-    </div>
+    <PageWrapper>
+      <TopBarWrapper>
+        <BackButton onClick={handleBackClick}>
+          <ArrowLeftIcon />
+        </BackButton>
+        <PageTitle>D-day</PageTitle>
+      </TopBarWrapper>
+      <DDayCard>
+        <DDayInfo>
+          <DDayTitle>{item.title}</DDayTitle>
+          <DDayContent>{item.content}</DDayContent>
+        </DDayInfo>
+        <DDayDate>{renderDDay(item)}</DDayDate>
+      </DDayCard>
+      <ButtonWrapper>
+        <Button variant="dday" onClick={handleDeleteClick}>
+          Delete
+        </Button>
+        <Button variant="dday" onClick={handleEditClick}>
+          Edit
+        </Button>
+      </ButtonWrapper>
+    </PageWrapper>
   );
 };
 

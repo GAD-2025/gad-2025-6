@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import styled from 'styled-components';
 import { ReactComponent as HomeDefault } from '../../assets/icons/home-default.svg';
 import { ReactComponent as HomeActive } from '../../assets/icons/home-active.svg';
 import { ReactComponent as LetterDefault } from '../../assets/icons/letter-default.svg';
@@ -10,6 +11,46 @@ import { ReactComponent as DayDefault } from '../../assets/icons/day-default.svg
 import { ReactComponent as DayActive } from '../../assets/icons/day-active.svg';
 import { ReactComponent as UserDefault } from '../../assets/icons/user-default.svg';
 import { ReactComponent as UserActive } from '../../assets/icons/user-active.svg';
+
+const NavContainer = styled.div`
+  width: 100%;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  backdrop-filter: blur(15px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 20px;
+  box-sizing: border-box;
+`;
+
+const NavLink = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  flex: 1;
+  color: #2a343d;
+`;
+
+const IconWrapper = styled.div`
+  width: 24px;
+  height: 24px;
+`;
+
+const NavLabel = styled.div`
+  text-align: center;
+  font-size: 12px;
+  font-family: 'Pangolin';
+  font-weight: 400;
+  line-height: 12px;
+  word-wrap: break-word;
+  color: #000;
+`;
 
 const navItems = [
   { to: '/home', icon: HomeDefault, activeIcon: HomeActive, label: 'Home' },
@@ -22,35 +63,16 @@ const navItems = [
 const BottomNav = () => {
   const location = useLocation();
 
-  const navItemStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    textDecoration: 'none',
-    flex: 1,
-  };
+  if (
+    ['/signin', '/signup', '/signup/password', '/signup/invitation', '/registration'].includes(
+      location.pathname
+    )
+  ) {
+    return null;
+  }
 
   return (
-    <div
-      style={{
-        width: '100%',
-        height: 88,
-        position: 'absolute',
-        left: 0,
-        bottom: 0,
-        background: 'rgba(255, 255, 255, 0.90)',
-        boxShadow: '4px 4px 10px rgba(0, 0, 0, 0.10)',
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15,
-        backdropFilter: 'blur(15px)',
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingTop: 12,
-        boxSizing: 'border-box',
-      }}
-    >
+    <NavContainer>
       {navItems.map((item) => {
         const isActive =
           item.to === '/' ? location.pathname === item.to : location.pathname.startsWith(item.to);
@@ -58,46 +80,15 @@ const BottomNav = () => {
         const Icon = isActive ? item?.activeIcon : item.icon;
 
         return (
-          <Link to={item.to} key={item.label} style={{ ...navItemStyle }}>
-            <Icon style={{ width: 24, height: 24 }} />
-            <div
-              style={{
-                textAlign: 'center',
-                fontSize: 12,
-                fontFamily: 'Pangolin',
-                fontWeight: '400',
-                lineHeight: '12px',
-                wordWrap: 'break-word',
-              }}
-            >
-              {item.label}
-            </div>
-          </Link>
+          <NavLink to={item.to} key={item.label}>
+            <IconWrapper>
+              <Icon style={{ width: '100%', height: '100%' }} />
+            </IconWrapper>
+            <NavLabel>{item.label}</NavLabel>
+          </NavLink>
         );
       })}
-      <div
-        style={{
-          width: 390,
-          height: 36,
-          left: 0,
-          top: 52,
-          position: 'absolute',
-          pointerEvents: 'none',
-        }}
-      >
-        <div
-          style={{
-            width: 134,
-            height: 5,
-            left: 128,
-            top: 23,
-            position: 'absolute',
-            background: 'white',
-            borderRadius: 100,
-          }}
-        />
-      </div>
-    </div>
+    </NavContainer>
   );
 };
 

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import BottomNav from '../../components/layout/BottomNav';
-import { ReactComponent as PencilIcon } from '../../assets/icons/li_pencil-line.svg';
 import { getDdaysByMatchingId } from '../../api/dday';
 import { getBucketListsByMatchingId, updateBucketList } from '../../api/bucketlist';
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import FloatingAddButton from '../../components/common/FloatingAddButton';
 
 const DDayPage = () => {
   const navigate = useNavigate();
@@ -100,15 +99,6 @@ const DDayPage = () => {
 
   return (
     <PageWrapper>
-      <TopNav>
-        <Time>19:02</Time>
-        <StatusBar>
-          <WifiIcon />
-          <BatteryIcon>
-            <BatteryFill />
-          </BatteryIcon>
-        </StatusBar>
-      </TopNav>
       <Title>D-day & Bucket List</Title>
       <TabWrapper>
         <Tab active={activeTab === 'dday'} onClick={() => setActiveTab('dday')}>
@@ -121,65 +111,75 @@ const DDayPage = () => {
       <ContentWrapper>
         {activeTab === 'dday' ? (
           <>
-            {/* <DDayCard>
-              <DDayText>Time Remaining Until Reunion</DDayText>
-              <DDayValue>Set D-day</DDayValue>
-              <DDaySubText>Enter the date to start the excitement!</DDaySubText>
-            </DDayCard> */}
             <DDayList>
               {ddayList.map((item) => (
                 <DDayItem key={item.id} onClick={() => handleDDayItemClick(item)}>
-                  <DDayItemBar />
-                  <DDayItemContent>
+                  <DDayContent>
                     <DDayItemInfo>
                       <DDayItemDate>{renderDateFormat(item.date)}</DDayItemDate>
                       <DDayItemTitle>{item.title}</DDayItemTitle>
                     </DDayItemInfo>
                     <DDayItemDDay>{calculateDday(item.date)}</DDayItemDDay>
-                  </DDayItemContent>
+                  </DDayContent>
                 </DDayItem>
               ))}
             </DDayList>
           </>
         ) : (
           <BucketListContainer>
-            {bucketList.map((item) => (
-              <BucketListItemWrapper key={item.id} onClick={() => handleBucketListItemClick(item)}>
-                <BucketListItemBar completed={item.is_completed} />
-                <BucketListItemContent completed={item.is_completed}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5.07px' }}>
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleComplete(item.id, item.is_completed);
-                      }}
-                    >
-                      {item.is_completed ? (
-                        <CompletedCheckbox>
-                          <CheckedIcon viewBox="0 0 24 24">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                          </CheckedIcon>
-                        </CompletedCheckbox>
-                      ) : (
-                        <EmptyCheckbox />
-                      )}
+            {bucketList
+              .sort((a, b) => a.is_completed - b.is_completed)
+              .map((item) => (
+                <BucketListItem key={item.id} onClick={() => handleBucketListItemClick(item)}>
+                  <BucketListContent completed={item.is_completed}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5.07px' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleComplete(item.id, item.is_completed);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          width: '18px',
+                          height: '18px',
+                        }}
+                      >
+                        {item.is_completed ? (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="17"
+                            viewBox="0 0 16 17"
+                            fill="none"
+                          >
+                            <rect width="16" height="17" rx="1.26812" fill="#4E78D2" />
+                            <path
+                              d="M13.8659 4.69244C13.523 4.3395 13.0088 4.3395 12.6659 4.69244L6.23733 11.3101L3.58019 8.57479C3.23733 8.22185 2.72305 8.22185 2.38019 8.57479C2.03733 8.92773 2.03733 9.45715 2.38019 9.81009L5.63733 13.163C5.80876 13.3395 5.98019 13.4277 6.23733 13.4277C6.49448 13.4277 6.6659 13.3395 6.83733 13.163L13.8659 5.92773C14.2088 5.57479 14.2088 5.04538 13.8659 4.69244Z"
+                              fill="white"
+                            />
+                          </svg>
+                        ) : (
+                          <EmptyCheckbox />
+                        )}
+                      </button>
+                      <BucketListItemInfo>
+                        <BucketListItemText completed={item.is_completed}>
+                          {item.title}
+                        </BucketListItemText>
+                      </BucketListItemInfo>
                     </div>
-                    <BucketListItemInfo>
-                      <BucketListItemText completed={item.is_completed}>
-                        {item.title}
-                      </BucketListItemText>
-                    </BucketListItemInfo>
-                  </div>
-                </BucketListItemContent>
-              </BucketListItemWrapper>
-            ))}
+                  </BucketListContent>
+                </BucketListItem>
+              ))}
           </BucketListContainer>
         )}
       </ContentWrapper>
-      <AddButton onClick={handleAddButtonClick}>
-        <PencilIcon style={{ width: 24, height: 24, fill: 'white' }} />
-      </AddButton>
-      <BottomNav />
+      <FloatingAddButton onClick={handleAddButtonClick} />
     </PageWrapper>
   );
 };
@@ -193,85 +193,33 @@ const PageWrapper = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-`;
-
-const TopNav = styled.div`
-  width: 390px;
-  height: 44px;
-  position: relative;
-  overflow: hidden;
-`;
-
-const Time = styled.div`
-  position: absolute;
-  left: 36.87px;
-  top: 15.54px;
-  text-align: center;
-  color: black;
-  font-size: 17.48px;
-  font-family: SF Pro Display, sans-serif;
-  font-weight: 600;
-  line-height: 17.48px;
-`;
-
-const StatusBar = styled.div`
-  position: absolute;
-  right: 14.5px;
-  top: 17.48px;
-  display: flex;
-  gap: 5px;
-`;
-
-const WifiIcon = styled.div`
-  width: 17.48px;
-  height: 12.62px;
-  background: black;
-`;
-
-const BatteryIcon = styled.div`
-  width: 25.83px;
-  height: 12.14px;
-  position: relative;
-`;
-
-const BatteryFill = styled.div`
-  width: 19.61px;
-  height: 8.4px;
-  left: 1.87px;
-  top: 1.87px;
-  position: absolute;
-  background: black;
+  align-items: flex-start;
 `;
 
 const ContentWrapper = styled.div`
-  width: 350px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-top: 150px;
 `;
 
 const Title = styled.div`
-  position: absolute;
-  left: 20px;
-  top: 60px;
-  color: black;
+  color: #000;
+  font-family: Pangolin;
   font-size: 24px;
-  font-family: 'Pangolin', sans-serif;
   font-weight: 400;
+  margin-bottom: 4px;
 `;
 
 const TabWrapper = styled.div`
-  position: absolute;
-  left: 52px;
-  top: 95px;
+  width: 100%;
   display: flex;
-  gap: 72px;
+  justify-content: center;
+  margin-bottom: 16px;
 `;
 
 const Tab = styled.div`
-  width: 106px;
+  flex: 1;
   padding: 14px 0;
   text-align: center;
   font-size: 16px;
@@ -282,78 +230,39 @@ const Tab = styled.div`
   border-bottom: ${(props) => (props.active ? '3px #84AF25 solid' : 'none')};
 `;
 
-const DDayCard = styled.div`
-  width: 350px;
-  padding: 24px 54px;
-  background: white;
-  border-radius: 10px;
-  outline: 1px #f0f0f0 solid;
-  outline-offset: -1px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  box-sizing: border-box;
-`;
-
-const DDayText = styled.div`
-  text-align: center;
-  color: black;
-  font-size: 12px;
-  font-family: 'Pretendard', sans-serif;
-  font-weight: 400;
-`;
-
-const DDayValue = styled.div`
-  text-align: center;
-  color: #84af25;
-  font-size: 24px;
-  font-family: 'Pretendard', sans-serif;
-  font-weight: 700;
-`;
-
-const DDaySubText = styled.div`
-  color: #404048;
-  font-size: 16px;
-  font-family: 'Pretendard', sans-serif;
-  font-weight: 700;
-`;
-
 const DDayList = styled.div`
-  width: 350px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
 `;
 
 const DDayItem = styled.div`
-  width: 350px;
+  width: 100%;
   height: 54px;
   position: relative;
+  cursor: pointer;
+  display: flex;
+
+  &::before {
+    content: '';
+    width: 12px;
+    height: calc(100% - 2px);
+    margin-right: -8px;
+    background: #9cb06e;
+    border-radius: 5px;
+  }
 `;
 
-const DDayItemBar = styled.div`
-  width: 12.68px;
-  height: 51.69px;
-  left: 0px;
-  top: 0px;
-  position: absolute;
-  background: #9cb06e;
-  border-radius: 5.07px;
-`;
-
-const DDayItemContent = styled.div`
-  width: 347.46px;
-  height: 54px;
-  padding: 8.24px 6.34px;
-  left: 2.54px;
-  top: 0px;
-  position: absolute;
+const DDayContent = styled.div`
+  width: 100%;
+  padding: 12px 8px;
   background: #f4f8ea;
-  border-radius: 5.07px;
+  border-radius: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   box-sizing: border-box;
 `;
 
@@ -361,6 +270,7 @@ const DDayItemInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
+  align-items: flex-start;
 `;
 
 const DDayItemDate = styled.div`
@@ -395,70 +305,48 @@ const AddButton = styled.div`
 `;
 
 const BucketListContainer = styled.div`
-  width: 350px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
 `;
 
-const BucketListItemWrapper = styled.div`
-  width: 350px;
+const BucketListItem = styled.div`
+  width: 100%;
   height: 54px;
   position: relative;
   cursor: pointer;
-`;
-
-const BucketListItemBar = styled.div`
-  width: 12.68px;
-  height: 51.69px;
-  left: 0px;
-  top: 0px;
-  position: absolute;
-  background: ${(props) => (props.completed ? '#4E78D2' : '#9CB06E')};
-  border-radius: 5.07px;
-`;
-
-const BucketListItemContent = styled.div`
-  width: 347.46px;
-  height: 54px;
-  padding: 8.24px 12px; /* Adjusted padding */
-  left: 2.54px;
-  top: 0px;
-  position: absolute;
-  background: #f4f8ea;
-  border-radius: 5.07px;
   display: flex;
-  justify-content: space-between; /* Use space-between */
+
+  &::before {
+    content: '';
+    width: 12px;
+    height: calc(100% - 2px);
+    margin-right: -8px;
+    background: #9cb06e;
+    border-radius: 5px;
+  }
+`;
+
+const BucketListContent = styled.div`
+  width: 100%;
+  padding: 12px 8px;
+  background: #f4f8ea;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 5.07px;
+  gap: 8px;
   box-sizing: border-box;
 `;
 
 const EmptyCheckbox = styled.div`
   width: 16px;
-  height: 17px;
+  height: 16px;
   position: relative;
   background: white;
-  border-radius: 1.27px;
-  border: 0.63px #6f737d solid;
-`;
-
-const CompletedCheckbox = styled.div`
-  width: 16px;
-  height: 17px;
-  position: relative;
-  background: #4e78d2;
-  overflow: hidden;
-  border-radius: 1.27px;
-`;
-
-const CheckedIcon = styled.svg`
-  width: 12px;
-  height: 9px;
-  left: 2.12px;
-  top: 4.43px;
-  position: absolute;
-  fill: white;
+  border-radius: 2px;
+  border: 1px #6f737d solid;
 `;
 
 const BucketListItemInfo = styled.div`

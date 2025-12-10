@@ -2,6 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../../context/AuthContext';
+import bucket from '../../assets/images/mypage-bucket.png';
+import quiz from '../../assets/images/mypage-quiz.png';
+import letter from '../../assets/images/mypage-letter.png';
+import setting from '../../assets/images/mypage-user.png';
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -18,41 +22,36 @@ const MyPage = () => {
 
   const handleLogin = () => {
     navigate('/signin');
-  }
+  };
 
   return (
     <PageWrapper>
       <Header>My Page</Header>
-      
-      {user ? (
-        <UserInfoCard>
-          <UserName>{user.name}</UserName>
-          <UserEmail>{user.email}</UserEmail>
-          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
-        </UserInfoCard>
-      ) : (
-        <UserInfoCard>
-            <p>You are not logged in.</p>
-            <LoginButton onClick={handleLogin}>Go to Login</LoginButton>
-        </UserInfoCard>
-      )}
 
       <CardGrid>
         <Card bgColor="#EAD7C4" onClick={() => handleCardClick('/slow-letter')}>
           <CardTitle color="#A17E66">Slow Letter</CardTitle>
-          <CardImage src="https://placehold.co/121x121" />
+          <CardImageWrapper>
+            <CardImage src={letter} />
+          </CardImageWrapper>
         </Card>
         <Card bgColor="#FFF8E2" onClick={() => handleCardClick('/daily-quiz')}>
           <CardTitle color="#FFC90F">Daily Quiz</CardTitle>
-          <CardImage src="https://placehold.co/121x121" />
+          <CardImageWrapper>
+            <CardImage src={quiz} />
+          </CardImageWrapper>
         </Card>
         <Card bgColor="#F4F8EA" onClick={() => handleCardClick('/dday')}>
           <CardTitle color="#84AF25">BucketList</CardTitle>
-          <CardImage src="https://placehold.co/121x121" />
+          <CardImageWrapper>
+            <CardImage src={bucket} />
+          </CardImageWrapper>
         </Card>
-         <Card bgColor="#FFF3F3" onClick={() => handleCardClick('/my-page/settings')}>
+        <Card bgColor="#FFF3F3" onClick={() => handleCardClick('/my-page/settings')}>
           <CardTitle color="#D58699">Settings</CardTitle>
-          <CardImage src="https://placehold.co/121x121" />
+          <CardImageWrapper>
+            <CardImage src={setting} />
+          </CardImageWrapper>
         </Card>
       </CardGrid>
     </PageWrapper>
@@ -62,18 +61,58 @@ const MyPage = () => {
 export default MyPage;
 
 const PageWrapper = styled.div`
-  padding: 20px;
-  padding-top: 60px;
-  background: white;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  gap: 44px;
 `;
 
 const Header = styled.h1`
+  color: #000;
+  font-family: Pangolin;
   font-size: 24px;
-  font-family: 'Pangolin', sans-serif;
-  margin-bottom: 20px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  text-align: left;
+  margin: 0;
+`;
+
+const Card = styled.div`
+  height: 180px;
+  border-radius: 16px;
+  background: ${(props) => props.bgColor || '#fff'};
+  cursor: pointer;
+  padding: 22px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+
+const CardTitle = styled.div`
+  overflow: hidden;
+  color: ${(props) => props.color || '#000'};
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: Pangolin;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  text-align: left;
+`;
+
+const CardImageWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const CardImage = styled.img`
+  height: 100px;
+  width: 100px;
+  aspect-ratio: 1/1;
 `;
 
 const UserInfoCard = styled.div`
@@ -115,39 +154,14 @@ const LogoutButton = styled.button`
 `;
 
 const LoginButton = styled(LogoutButton)`
-    background-color: #3b82f6;
-    &:hover {
-        background-color: #2563eb;
-    }
+  background-color: #3b82f6;
+  &:hover {
+    background-color: #2563eb;
+  }
 `;
 
 const CardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-`;
-
-const Card = styled.div`
-  background: ${({ bgColor }) => bgColor || '#FFF3F3'};
-  border-radius: 16px;
-  padding: 20px;
-  position: relative;
-  height: 190px;
-  cursor: pointer;
-  overflow: hidden;
-`;
-
-const CardTitle = styled.div`
-  color: ${({ color }) => color || '#D58699'};
-  font-size: 20px;
-  font-family: 'Pangolin', sans-serif;
-  font-weight: 400;
-`;
-
-const CardImage = styled.img`
-  width: 121px;
-  height: 121px;
-  position: absolute;
-  bottom: -20px;
-  right: -20px;
 `;

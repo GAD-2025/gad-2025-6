@@ -1,24 +1,32 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // Import useAuth hook from AuthContext
+import { useAuth } from '../../context/AuthContext';
+import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
+import Field from '../../components/common/Field';
+import { ReactComponent as BackIcon } from '../../assets/icons/arrow-left.svg';
+import { ReactComponent as CopyIcon } from '../../assets/icons/copy.svg';
+import Modal from '../../components/common/Modal';
 
 const InvitationCodePage = () => {
   const navigate = useNavigate();
   const { refreshUser } = useAuth(); // Get refreshUser function from AuthContext
   const [opponentCode, setOpponentCode] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const storedUser = JSON.parse(localStorage.getItem('user'));
   const myCode = storedUser.user_code || '...';
 
+  const isButtonEnabled = opponentCode.length > 0;
+
   const handleCopyCode = () => {
     navigator.clipboard.writeText(myCode);
-    alert('Your code has been copied!');
-    // The user might want to navigate to a waiting screen here, keeping original logic
-    // navigate('/signup/waiting', { state: { myCode } });
+    setIsModalOpen(true);
   };
 
   const handleConnectClick = async () => {
+    if (!isButtonEnabled) return;
+
     const userId = storedUser.id;
 
     try {
@@ -34,9 +42,8 @@ const InvitationCodePage = () => {
       });
 
       if (result.ok) {
-        // 매칭 성공 후 user 정보를 새로고침하여 matching_id를 가져옴
         await refreshUser(userId);
-        navigate('/onboarding');
+        navigate('/registration');
       } else {
         const errorData = await result.json();
         alert(`Connection failed: ${errorData.message}`);
@@ -48,143 +55,211 @@ const InvitationCodePage = () => {
     }
   };
 
+  useEffect(() => {
+    if (isModalOpen) {
+      const timer = setTimeout(() => {
+        setIsModalOpen(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const userId = storedUser.id;
+      const result = await refreshUser(userId);
+      if (result.matching_id) {
+        navigate('/registration');
+      }
+    };
+
+    const pollingInterval = setInterval(fetchUserData, 10000);
+
+    return () => clearInterval(pollingInterval);
+  }, []);
+
   return (
-    <PageWrapper>
-      <Header>Invitation code</Header>
-      <Subtitle>Please connect by entering each other's invitation codes.</Subtitle>
+    <>
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'white',
+          gap: 16,
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '10px 0',
+          }}
+        >
+          <button
+            style={{
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+            }}
+            // onClick={() => navigate(-1)}
+          >
+            <BackIcon />
+          </button>
+        </div>
 
-      <CodeContainer>
-        <CodeSection>
-          <InputLabel>My code</InputLabel>
-          <MyCodeDisplay>
-            <span>{myCode}</span>
-            <CopyButton onClick={handleCopyCode}>Copy</CopyButton>
-          </MyCodeDisplay>
-        </CodeSection>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 40,
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                alignSelf: 'stretch',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 44,
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 40,
+                }}
+              >
+                <div
+                  style={{
+                    alignSelf: 'start',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      alignSelf: 'start',
+                      color: 'var(--Black, black)',
+                      fontSize: 24,
+                      fontFamily: 'Pretendard',
+                      fontWeight: '700',
+                    }}
+                  >
+                    Invitation code
+                  </div>
+                  <div
+                    style={{
+                      alignSelf: 'stretch',
+                      color: 'var(--Gray-4, #9E9FAD)',
+                      fontSize: 16,
+                      fontFamily: 'Pretendard',
+                      fontWeight: '700',
+                    }}
+                  >
+                    Please connect by entering each other's invitation codes.
+                  </div>
+                </div>
 
-        <CodeSection>
-          <InputLabel>Opponent's code</InputLabel>
-          <StyledInput
-            type="text"
-            placeholder="Enter opponent's code"
-            value={opponentCode}
-            onChange={(e) => setOpponentCode(e.target.value)}
-          />
-        </CodeSection>
-      </CodeContainer>
+                <div
+                  style={{
+                    alignSelf: 'stretch',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 24,
+                    height: '100%',
+                  }}
+                >
+                  <Field label="My code" variant="signin">
+                    <Input
+                      type="text"
+                      value={myCode}
+                      readOnly
+                      icon={CopyIcon}
+                      onIconClick={handleCopyCode}
+                    />
+                  </Field>
 
-      <ConnectButton onClick={handleConnectClick}>Complete</ConnectButton>
-    </PageWrapper>
+                  <Field label="Opponent's code" variant="signin">
+                    <Input
+                      type="text"
+                      placeholder="Enter opponent's code"
+                      value={opponentCode}
+                      onChange={(e) => setOpponentCode(e.target.value)}
+                    />
+                  </Field>
+
+                  <div
+                    style={{
+                      flex: 1,
+                    }}
+                  />
+
+                  <Button disabled={!isButtonEnabled} variant="signin" onClick={handleConnectClick}>
+                    Connect
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 18,
+            alignItems: 'center',
+            width: 300,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: '700',
+              color: '#28282E',
+            }}
+          >
+            Copy Completed
+          </div>
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: '700',
+              color: '#9E9FAD',
+            }}
+          >
+            My code has been copied.
+            <br />
+            Send it to your partner!
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 
 export default InvitationCodePage;
-
-const PageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px;
-  height: 100vh;
-  background-color: white;
-  position: relative;
-`;
-
-const Header = styled.h1`
-  font-size: 32px;
-  font-weight: bold;
-  color: #292929;
-  margin-bottom: 10px;
-  font-family: 'Pretendard', sans-serif;
-`;
-
-const Subtitle = styled.p`
-  font-size: 16px;
-  color: #9e9fad;
-  margin-bottom: 40px;
-  font-family: 'Pretendard', sans-serif;
-  text-align: center;
-`;
-
-const CodeContainer = styled.div`
-  width: 100%;
-  max-width: 350px;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  margin-bottom: 40px;
-`;
-
-const CodeSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const InputLabel = styled.label`
-  font-size: 14px;
-  color: #292929;
-  font-weight: 600;
-  font-family: 'Pretendard', sans-serif;
-`;
-
-const MyCodeDisplay = styled.div`
-  width: 100%;
-  padding: 15px;
-  border: 1px solid #eaeaea;
-  border-radius: 10px;
-  font-size: 16px;
-  font-family: 'Pretendard', sans-serif;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #fafafa;
-`;
-
-const CopyButton = styled.button`
-  padding: 8px 12px;
-  background-color: #ffc90f;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-
-  &:hover {
-    background-color: #e6b800;
-  }
-`;
-
-const StyledInput = styled.input`
-  width: 100%;
-  padding: 15px;
-  border: 1px solid #eaeaea;
-  border-radius: 10px;
-  font-size: 16px;
-  font-family: 'Pretendard', sans-serif;
-
-  &:focus {
-    outline: none;
-    border-color: #ffc90f;
-  }
-`;
-
-const ConnectButton = styled.button`
-  width: 100%;
-  max-width: 350px;
-  padding: 18px;
-  background-color: #ffc90f;
-  color: white;
-  border: none;
-  border-radius: 28px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  position: absolute;
-  bottom: 40px;
-  font-family: 'Pretendard', sans-serif;
-
-  &:hover {
-    background-color: #e6b800;
-  }
-`;

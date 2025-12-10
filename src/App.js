@@ -26,10 +26,9 @@ import EditDDayPage from './pages/DDay/EditDDayPage';
 import SettingsPage from './pages/MyPage/SettingsPage';
 import MainLayout from './components/layout/MainLayout';
 
-
 import PrivateRoute from './components/common/PrivateRoute';
 import { useAuth } from './context/AuthContext';
-
+import RegistrationComplete from './pages/Auth/RegistrationComplete';
 
 function App() {
   const { user } = useAuth();
@@ -37,13 +36,16 @@ function App() {
   return (
     <div className="App">
       <Routes>
-        {/* Authentication & Onboarding Routes (without MainLayout) */}
-        <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/signup/password" element={<PasswordSignUpPage />} />
-        <Route path="/signup/invitation" element={<InvitationCodePage />} />
-        <Route path="/signup/waiting" element={<WaitingForPartnerPage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
+        {/* Authentication & Onboarding Routes (without MainLayout and PrivateRoute) */}
+        <Route element={<MainLayout />}>
+          <Route path="/signin" element={<SignInPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/signup/password" element={<PasswordSignUpPage />} />
+          <Route path="/signup/invitation" element={<InvitationCodePage />} />
+          <Route path="/signup/waiting" element={<WaitingForPartnerPage />} />
+          <Route path="/registration" element={<RegistrationComplete />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
+        </Route>
 
         {/* Main Application Routes (with MainLayout) */}
         <Route element={<PrivateRoute />}>
@@ -66,7 +68,7 @@ function App() {
             <Route path="/create-quiz" element={<CreateQuizPage />} />
           </Route>
         </Route>
-        <Route path="/" element={<Navigate to={user ? "/home" : "/signin"} />} />
+        <Route path="/" element={<Navigate to={user ? '/home' : '/signin'} />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
