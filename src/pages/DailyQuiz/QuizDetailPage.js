@@ -1,23 +1,188 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import QuizSubmitModal from '../../components/common/QuizSubmitModal';
-import CorrectAnswerModal from '../../components/common/CorrectAnswerModal';
-import IncorrectAnswerModal from '../../components/common/IncorrectAnswerModal';
-import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { deleteQuiz, submitQuizAnswer, getQuizById } from '../../api/quiz';
+import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg';
+import styled from 'styled-components';
+import Button from '../../components/common/Button';
+import Modal from '../../components/common/Modal';
+
+const PageWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+`;
+
+const BackButton = styled.button`
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+`;
+
+const TopBarWrapper = styled.div`
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const PageTitle = styled.div`
+  text-align: center;
+  color: black;
+  font-size: 20px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+`;
+
+const QuizCard = styled.div`
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #fff8e2;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px 4px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  box-sizing: border-box;
+`;
+
+const QuizInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+`;
+
+const QuizAnswer = styled.div`
+  text-align: left;
+  color: #444;
+  font-family: Pretendard;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+`;
+
+const QuizInput = styled.input`
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #444444;
+  color: #444444;
+  font-size: 36px;
+  font-family: 'Pretendard';
+  font-weight: 700;
+  width: 100%;
+  outline: none;
+  padding: 0;
+
+  &::placeholder {
+    color: #979797;
+  }
+`;
+
+const QuizHint = styled.div`
+  color: #979797;
+  font-family: Pretendard;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  text-align: left;
+`;
+
+const QuizDate = styled.div`
+  width: 100%;
+  color: #979797;
+  text-align: right;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+`;
+
+const ButtonWrapper = styled.div`
+  width: 100%;
+  margin-top: 32px;
+`;
+
+const ModalContent = styled.div`
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const ModalTitle = styled.div`
+  color: #28282e;
+  text-align: center;
+  font-feature-settings: 'liga' off, 'clig' off;
+
+  font-family: Pretendard;
+  font-size: 18px;
+  font-weight: 700;
+`;
+
+const ModalDescription = styled.div`
+  color: #9e9fad;
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  margin-bottom: 8px;
+`;
 
 const QuizDetailPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user } = useAuth(); // Get user context
-  const quiz = location.state?.quiz;
+  const { quizId } = useParams();
+  const { user } = useAuth();
 
+  const [quiz, setQuiz] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [answer, setAnswer] = useState('');
-  const [showModal, setShowModal] = useState(false);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
 
+  useEffect(() => {
+    const fetchQuiz = async () => {
+      try {
+        setLoading(true);
+        const quizData = await getQuizById(quizId);
+        if (quizData) {
+          setQuiz(quizData);
+        } else {
+          console.error('Quiz not found');
+        }
+      } catch (error) {
+        console.error('Error fetching quiz:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (quizId) {
+      fetchQuiz();
+    }
+  }, [quizId]);
+
+  if (loading) {
+    return <PageWrapper>Loading...</PageWrapper>;
+  }
+
   if (!quiz) {
-    return <div>Quiz not found!</div>;
+    return <PageWrapper>Quiz not found!</PageWrapper>;
   }
 
   const isCreator = user && user.id === quiz.creator_id;
@@ -26,140 +191,124 @@ const QuizDetailPage = () => {
     navigate(-1);
   };
 
-  const handleSendClick = () => {
-    setShowModal(true);
-  };
+  const handleSendClick = async () => {
+    if (answer.trim() === '') return;
 
-  const handleConfirmSubmit = () => {
-    setShowModal(false);
-    if (answer.trim().toLowerCase() === quiz.answer.toLowerCase()) {
-      setShowCorrectModal(true);
-    } else {
-      setShowIncorrectModal(true);
+    try {
+      const result = await submitQuizAnswer(quiz.id, answer);
+
+      if (result.success) {
+        if (result.correct) {
+          setShowCorrectModal(true);
+        } else {
+          setShowIncorrectModal(true);
+        }
+      } else {
+        alert(result.message || 'Failed to submit answer.');
+      }
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      alert('An error occurred while submitting your answer.');
     }
   };
 
-  const handleCancelSubmit = () => {
-    setShowModal(false);
-  };
+  const handleCancelSubmit = () => {};
 
-  const handleCloseCorrectModal = () => {
+  const handleConfirmModal = () => {
     setShowCorrectModal(false);
+    setShowIncorrectModal(false);
     navigate('/daily-quiz');
   };
 
-  const handleRetry = () => {
-    setShowIncorrectModal(false);
-    setAnswer('');
+  const handleDeleteClick = async () => {
+    if (window.confirm('Are you sure you want to delete this quiz?')) {
+      try {
+        const response = await deleteQuiz(quiz.id);
+        if (response.success) {
+          navigate('/daily-quiz');
+        } else {
+          alert(`Failed to delete quiz: ${response.message}`);
+        }
+      } catch (err) {
+        console.error('Error deleting quiz:', err);
+        alert('An error occurred while deleting the quiz.');
+      }
+    }
   };
 
   const isButtonDisabled = answer.trim() === '';
 
-  const inputStyle = {
-    background: 'transparent',
-    border: 'none',
-    borderBottom: '2px solid #444444',
-    color: '#444444',
-    fontSize: 36,
-    fontFamily: 'Pretendard',
-    fontWeight: '700',
-    width: '100%',
-    outline: 'none',
-    padding: 0,
-  };
-
-  const buttonBaseStyle = {
-    width: 350,
-    padding: 16,
-    borderRadius: 12,
-    border: 'none',
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-    cursor: 'pointer',
-    margin: '0 auto'
-  };
-
-  const buttonEnabledStyle = {
-    ...buttonBaseStyle,
-    background: '#FFC90F',
-  };
-
-  const buttonDisabledStyle = {
-    ...buttonBaseStyle,
-    background: '#E0E0E0',
-    cursor: 'not-allowed',
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
   };
 
   return (
-    <div style={{width: 390, height: 844, background: '#F9F9F9', overflow: 'hidden', position: 'relative'}}>
-      <div style={{width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 44}}>
-        {/* Header */}
-        <div data-property-1="Variant4" style={{width: '100%', height: 44, position: 'relative', overflow: 'hidden', marginBottom: 24}}>
-          <div data-property-1="icon_arrow_left" onClick={handleBackClick} style={{width: 24, height: 24, left: 20, top: 10.50, position: 'absolute', cursor: 'pointer'}}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 18L9 12L15 6" stroke="#1A1B1E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <div style={{left: '50%', transform: 'translateX(-50%)', top: 10, position: 'absolute', textAlign: 'center', color: 'var(--Black, black)', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700'}}>Quiz</div>
-        </div>
-
-        {/* Quiz Card Detail */}
-        <div data-property-1="Default" style={{height: 422, padding: 24, background: '#FFF8E2', boxShadow: '0px 4px 10px 4px rgba(0, 0, 0, 0.04)', overflow: 'hidden', borderRadius: 16, display: 'flex', width: 350, boxSizing: 'border-box'}}>
-          <div style={{width: '100%', alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', display: 'inline-flex'}}>
-            <div style={{alignSelf: 'stretch', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 24, display: 'flex'}}>
-              {isCreator ? (
-                // If user is the creator, show the question as text
-                <div style={{alignSelf: 'stretch', color: '#444444', fontSize: 36, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.question}</div>
-              ) : (
-                // If user is not the creator, show the input field
-                <input
-                  type="text"
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="Enter the answer"
-                  style={inputStyle}
-                />
-              )}
-              <div style={{alignSelf: 'stretch', color: '#979797', fontSize: 20, fontFamily: 'Pretendard', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.question}</div>
-            </div>
-            <div style={{alignSelf: 'stretch', textAlign: 'right', color: '#979797', fontSize: 19.93, fontFamily: 'Pretendard Variable', fontWeight: '700', wordWrap: 'break-word'}}>{quiz.created_at}</div>
-          </div>
-        </div>
-        
-        {/* Send Button */}
-        <div style={{ width: '100%', marginTop: 170 }}>
-          {!isCreator && ( // Only show the send button if the user is not the creator
-            <button
-              style={isButtonDisabled ? buttonDisabledStyle : buttonEnabledStyle}
-              disabled={isButtonDisabled}
-              onClick={handleSendClick}
-            >
+    <>
+      <PageWrapper>
+        <TopBarWrapper>
+          <BackButton onClick={handleBackClick}>
+            <ArrowLeftIcon />
+          </BackButton>
+          <PageTitle>Quiz</PageTitle>
+        </TopBarWrapper>
+        <QuizCard>
+          <QuizInfo>
+            {isCreator ? (
+              <QuizAnswer>{quiz.answer}</QuizAnswer>
+            ) : (
+              <QuizInput
+                type="text"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Enter the answer"
+              />
+            )}
+            <QuizHint>{quiz.hint}</QuizHint>
+          </QuizInfo>
+          <QuizDate>{formatDate(quiz.created_at)}</QuizDate>
+        </QuizCard>
+        {isCreator ? (
+          <ButtonWrapper>
+            <Button variant="quiz" onClick={handleDeleteClick}>
+              Delete
+            </Button>
+          </ButtonWrapper>
+        ) : (
+          <ButtonWrapper>
+            <Button variant="quiz" onClick={handleSendClick} disabled={isButtonDisabled}>
               Send
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Home Indicator */}
-      <div style={{width: 390, height: 36, position: 'absolute', bottom: 0, left: 0}}>
-        <div style={{width: 134, height: 5, left: 128, top: 23, position: 'absolute', background: 'black', borderRadius: 100}} />
-      </div>
-
-      {/* Modals */}
-      {showModal && (
-        <QuizSubmitModal
-          onConfirm={handleConfirmSubmit}
-          onCancel={handleCancelSubmit}
-        />
-      )}
-      {showCorrectModal && (
-        <CorrectAnswerModal onClose={handleCloseCorrectModal} />
-      )}
-      {showIncorrectModal && (
-        <IncorrectAnswerModal onRetry={handleRetry} />
-      )}
-    </div>
+            </Button>
+          </ButtonWrapper>
+        )}
+      </PageWrapper>
+      <Modal open={showCorrectModal} onClose={handleCancelSubmit}>
+        <ModalContent>
+          <ModalTitle>Congratulation! 😊</ModalTitle>
+          <ModalDescription>{`The answer is ${quiz.answer}.`}</ModalDescription>
+          <Button variant="quiz" onClick={handleConfirmModal}>
+            Confirm
+          </Button>
+        </ModalContent>
+      </Modal>
+      <Modal open={showIncorrectModal} onClose={handleCancelSubmit}>
+        <ModalContent>
+          <ModalTitle>
+            Nice try!
+            <br />
+            But that one's off 😢
+          </ModalTitle>
+          <ModalDescription>{`The answer is ${quiz.answer}.`}</ModalDescription>
+          <Button variant="quiz" onClick={handleConfirmModal}>
+            Confirm
+          </Button>
+        </ModalContent>
+      </Modal>
+    </>
   );
 };
+
 export default QuizDetailPage;

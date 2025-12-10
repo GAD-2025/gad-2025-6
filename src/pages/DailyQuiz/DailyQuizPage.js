@@ -5,6 +5,53 @@ import ReceivedQuizList from './ReceivedQuizList';
 import CreatedQuizList from './CreatedQuizList';
 import { getQuizzes } from '../../api/quiz'; // Import real API
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import styled from 'styled-components';
+import FloatingAddButton from '../../components/common/FloatingAddButton';
+
+const PageWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
+
+const ContentWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const Title = styled.div`
+  color: #000;
+  font-family: Pangolin;
+  font-size: 24px;
+  font-weight: 400;
+  margin-bottom: 4px;
+`;
+
+const TabWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+`;
+
+const Tab = styled.div`
+  flex: 1;
+  padding: 14px 0;
+  text-align: center;
+  font-size: 16px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  color: ${(props) => (props.active ? '#FFC90F' : '#9E9FAD')};
+  border-bottom: ${(props) => (props.active ? '3px #FFC90F solid' : 'none')};
+`;
 
 const DailyQuizPage = () => {
   const navigate = useNavigate();
@@ -25,75 +72,36 @@ const DailyQuizPage = () => {
 
   const createdQuizzes = useMemo(() => {
     if (!user || !user.id) return [];
-    return allQuizzes.filter(quiz => quiz.creator_id === user.id);
+    return allQuizzes.filter((quiz) => quiz.creator_id === user.id);
   }, [allQuizzes, user]);
 
   const receivedQuizzes = useMemo(() => {
     if (!user || !user.id) return [];
-    return allQuizzes.filter(quiz => quiz.creator_id !== user.id);
-  }, [allQuizzes, user]);
 
+    return allQuizzes.filter((quiz) => quiz.creator_id !== user.id);
+  }, [allQuizzes, user]);
   const handleCreateQuizClick = () => {
     navigate('/create-quiz');
   };
 
-  const handleReceivedClick = () => {
-    setActiveTab('received');
-  };
-
   return (
-    <div style={{height: 844, position: 'relative', background: 'white', display: 'flex', flexDirection: 'column'}}>
-      {/* Header */}
-      <div style={{left: 20, top: 60, position: 'absolute', color: 'black', fontSize: 24, fontFamily: 'Pangolin', fontWeight: '400'}}>Daily Quiz</div>
-
-      {/* Tabs */}
-      <div style={{left: 52, top: 95, position: 'absolute', justifyContent: 'flex-start', alignItems: 'center', gap: 72, display: 'inline-flex'}}>
-        <div
-          style={{
-            width: 106,
-            paddingTop: 14,
-            paddingBottom: 14,
-            borderBottom: activeTab === 'received' ? '3px #FFC90F solid' : 'none',
-            justifyContent: 'center',
-            alignItems: 'center',
-            display: 'flex',
-            cursor: 'pointer'
-          }}
-          onClick={handleReceivedClick}
-        >
-          <div style={{textAlign: 'center', color: activeTab === 'received' ? '#FFC90F' : '#9E9FAD', fontSize: 16, fontWeight: '700'}}>
-            Received
-          </div>
-        </div>
-        <div
-          style={{
-            width: 106,
-            paddingTop: 14,
-            paddingBottom: 14,
-            borderBottom: activeTab === 'created' ? '3px #FFC90F solid' : 'none',
-            justifyContent: 'center',
-            alignItems: 'center',
-            display: 'flex',
-            cursor: 'pointer'
-          }}
-          onClick={() => setActiveTab('created')}
-        >
-          <div style={{textAlign: 'center', color: activeTab === 'created' ? '#FFC90F' : '#9E9FAD', fontSize: 16, fontWeight: '700'}}>Created</div>
-        </div>
-      </div>
-
-      {/* Quiz Card List */}
+    <PageWrapper>
+      <Title>Daily Quiz</Title>
+      <TabWrapper>
+        <Tab active={activeTab === 'received'} onClick={() => setActiveTab('received')}>
+          Received
+        </Tab>
+        <Tab active={activeTab === 'created'} onClick={() => setActiveTab('created')}>
+          Created
+        </Tab>
+      </TabWrapper>
       {activeTab === 'received' ? (
         <ReceivedQuizList quizData={receivedQuizzes} />
       ) : (
-        <CreatedQuizList quizData={createdQuizzes} />
+        <CreatedQuizList quizData={createdQuizzes} onCreateQuiz={handleCreateQuizClick} />
       )}
-
-      {/* Floating Action Button */}
-      <div onClick={handleCreateQuizClick} style={{padding: 18, left: 310, top: 680, position: 'absolute', background: '#0C0C0C', borderRadius: 100, justifyContent: 'center', alignItems: 'center', display: 'inline-flex', cursor: 'pointer'}}>
-        <PencilIcon style={{width: 24, height: 24}} />
-      </div>
-    </div>
+      <FloatingAddButton onClick={handleCreateQuizClick} />
+    </PageWrapper>
   );
 };
 
