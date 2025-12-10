@@ -75,8 +75,9 @@ CREATE TABLE `slow_letters` (
 CREATE TABLE `quizzes` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `creator_id` INT NOT NULL,
-  `question` VARCHAR(255) NOT NULL,
   `answer` VARCHAR(255) NOT NULL,
+  `hint` VARCHAR(255) NOT NULL,
+  `is_solve` TINYINT(1) DEFAULT '0',
   `matching_id` INT NULL,
   `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

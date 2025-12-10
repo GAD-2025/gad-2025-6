@@ -39,9 +39,7 @@ async function initializeDatabase() {
     connection = await pool.getConnection();
 
     // users 테이블 존재 확인
-    const [tables] = await connection.query(
-      "SHOW TABLES LIKE 'users'"
-    );
+    const [tables] = await connection.query("SHOW TABLES LIKE 'users'");
 
     if (tables.length === 0) {
       console.log('Tables not found. Creating database schema...');
@@ -53,14 +51,16 @@ async function initializeDatabase() {
       // SQL 문을 개별적으로 실행
       const statements = schema
         .split(';')
-        .map(stmt => stmt.trim())
-        .filter(stmt => stmt.length > 0 && !stmt.startsWith('—') && !stmt.startsWith('/*'));
+        .map((stmt) => stmt.trim())
+        .filter((stmt) => stmt.length > 0 && !stmt.startsWith('—') && !stmt.startsWith('/*'));
 
       for (const statement of statements) {
-        if (statement.includes('DROP TABLE') ||
-            statement.includes('CREATE TABLE') ||
-            statement.includes('ALTER TABLE') ||
-            statement.includes('CREATE INDEX')) {
+        if (
+          statement.includes('DROP TABLE') ||
+          statement.includes('CREATE TABLE') ||
+          statement.includes('ALTER TABLE') ||
+          statement.includes('CREATE INDEX')
+        ) {
           await connection.query(statement);
         }
       }
@@ -269,7 +269,9 @@ app.post('/api/letters', async (req, res) => {
   // 이 userId는 인증 토큰(JWT 등)을 통해 서버에서 직접 추출해야 안전합니다.
   // 현재 구조상 임시로 이 방법을 사용합니다.
   if (!title || !content || !userId) {
-    return res.status(400).json({ success: false, message: 'Title, content, and userId are required.' });
+    return res
+      .status(400)
+      .json({ success: false, message: 'Title, content, and userId are required.' });
   }
 
   try {
@@ -289,13 +291,10 @@ app.post('/api/letters', async (req, res) => {
 
     if (!matchingId) {
       connection.release();
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message:
-            'User is not matched with anyone. Letters can only be created within a matching.',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'User is not matched with anyone. Letters can only be created within a matching.',
+      });
     }
 
     const [result] = await connection.execute(
@@ -337,13 +336,11 @@ app.get('/api/letters/user/:userId', async (req, res) => {
 
     if (!matchingId) {
       connection.release();
-      return res
-        .status(200)
-        .json({
-          success: true,
-          letters: [],
-          message: 'User is not matched. No letters to display.',
-        });
+      return res.status(200).json({
+        success: true,
+        letters: [],
+        message: 'User is not matched. No letters to display.',
+      });
     }
 
     // 매칭된 사용자들의 모든 편지 조회 (matching_id 기준)
@@ -361,13 +358,13 @@ app.get('/api/letters/user/:userId', async (req, res) => {
 
 // 퀴즈 생성 API 엔드포인트
 app.post('/api/quizzes', async (req, res) => {
-  const { question, answer, creatorId } = req.body;
+  const { hint, answer, creatorId } = req.body;
 
   // 중요: creatorId는 보안을 위해 실제로는 인증 토큰에서 추출해야 합니다.
-  if (!question || !answer || !creatorId) {
+  if (!hint || !answer || !creatorId) {
     return res
       .status(400)
-      .json({ success: false, message: 'Question, answer, and creatorId are required.' });
+      .json({ success: false, message: 'Hint, answer, and creatorId are required.' });
   }
 
   try {
@@ -387,18 +384,15 @@ app.post('/api/quizzes', async (req, res) => {
 
     if (!matchingId) {
       connection.release();
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message:
-            'User is not matched with anyone. Quizzes can only be created within a matching.',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'User is not matched with anyone. Quizzes can only be created within a matching.',
+      });
     }
 
     const [result] = await connection.execute(
-      'INSERT INTO quizzes (creator_id, question, answer, matching_id) VALUES (?, ?, ?, ?)',
-      [creatorId, question, answer, matchingId]
+      'INSERT INTO quizzes (creator_id, hint, answer, matching_id) VALUES (?, ?, ?, ?)',
+      [creatorId, hint, answer, matchingId]
     );
     connection.release();
     res
@@ -435,13 +429,11 @@ app.get('/api/quizzes/user/:userId', async (req, res) => {
 
     if (!matchingId) {
       connection.release();
-      return res
-        .status(200)
-        .json({
-          success: true,
-          quizzes: [],
-          message: 'User is not matched. No quizzes to display.',
-        });
+      return res.status(200).json({
+        success: true,
+        quizzes: [],
+        message: 'User is not matched. No quizzes to display.',
+      });
     }
 
     // 매칭된 사용자들의 모든 퀴즈 조회 (matching_id 기준)
@@ -454,6 +446,123 @@ app.get('/api/quizzes/user/:userId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching quizzes:', error);
     res.status(500).json({ success: false, message: 'Server error while fetching quizzes.' });
+  }
+});
+
+// 단일 퀴즈 조회 API 엔드포인트
+app.get('/api/quizzes/:quizId', async (req, res) => {
+  const { quizId } = req.params;
+
+  if (!quizId) {
+    return res.status(400).json({ success: false, message: 'Quiz ID is required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // 퀴즈 정보 조회
+    const [quizzes] = await connection.execute(
+      'SELECT * FROM quizzes WHERE id = ?',
+      [quizId]
+    );
+    connection.release();
+
+    if (quizzes.length === 0) {
+      return res.status(404).json({ success: false, message: 'Quiz not found.' });
+    }
+
+    res.status(200).json({ success: true, quiz: quizzes[0] });
+  } catch (error) {
+    console.error('Error fetching quiz:', error);
+    res.status(500).json({ success: false, message: 'Server error while fetching quiz.' });
+  }
+});
+
+// 퀴즈 제출 API 엔드포인트
+app.post('/api/quizzes/:quizId/submit', async (req, res) => {
+  const { quizId } = req.params;
+  const { answer } = req.body;
+
+  if (!quizId) {
+    return res.status(400).json({ success: false, message: 'Quiz ID is required.' });
+  }
+
+  if (!answer) {
+    return res.status(400).json({ success: false, message: 'Answer is required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // 퀴즈 정보 조회
+    const [quizzes] = await connection.execute(
+      'SELECT id, answer, is_solve FROM quizzes WHERE id = ?',
+      [quizId]
+    );
+
+    if (quizzes.length === 0) {
+      connection.release();
+      return res.status(404).json({ success: false, message: 'Quiz not found.' });
+    }
+
+    const quiz = quizzes[0];
+
+    // 이미 풀린 퀴즈인지 확인
+    if (quiz.is_solve === 1) {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        message: 'This quiz has already been solved.',
+      });
+    }
+
+    // 정답 확인 (대소문자 구분 없이, 공백 제거 후 비교)
+    const isCorrect = answer.trim().toLowerCase() === quiz.answer.trim().toLowerCase();
+
+    // 제출 기록이 남으면 is_solve를 1로 업데이트 (정답/오답 무관)
+    await connection.execute('UPDATE quizzes SET is_solve = 1 WHERE id = ?', [quizId]);
+    connection.release();
+
+    if (isCorrect) {
+      return res.status(200).json({
+        success: true,
+        correct: true,
+        message: 'Correct answer! Quiz solved successfully.',
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        correct: false,
+        message: 'Incorrect answer. Please try again.',
+      });
+    }
+  } catch (error) {
+    console.error('Error submitting quiz answer:', error);
+    res.status(500).json({ success: false, message: 'Server error while submitting answer.' });
+  }
+});
+
+// 퀴즈 삭제 API 엔드포인트
+app.delete('/api/quizzes/:quizId', async (req, res) => {
+  const { quizId } = req.params;
+
+  if (!quizId) {
+    return res.status(400).json({ success: false, message: 'Quiz ID is required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute('DELETE FROM quizzes WHERE id = ?', [quizId]);
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Quiz not found.' });
+    }
+
+    res.status(200).json({ success: true, message: 'Quiz deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting quiz:', error);
+    res.status(500).json({ success: false, message: 'Server error while deleting quiz.' });
   }
 });
 
@@ -786,13 +895,11 @@ app.post('/api/matching', async (req, res) => {
       connection.release();
     }
     console.error('Error creating matching:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Server error while creating matching.',
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating matching.',
+      error: error.message,
+    });
   }
 });
 

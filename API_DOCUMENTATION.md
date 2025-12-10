@@ -670,8 +670,8 @@ POST /api/quizzes
 
 ```typescript
 {
-  question: string,   // 필수
-  answer: string,     // 필수
+  hint: string,       // 필수 - 정답을 찾기 위한 힌트
+  answer: string,     // 필수 - 정답
   creatorId: number   // 필수 (⚠️ 프로덕션에서는 인증 토큰에서 추출해야 함)
 }
 ```
@@ -680,7 +680,7 @@ POST /api/quizzes
 
 ```json
 {
-  "question": "우리가 처음 만난 장소는?",
+  "hint": "우리가 처음 만난 장소",
   "answer": "카페 봄",
   "creatorId": 1
 }
@@ -711,7 +711,7 @@ POST /api/quizzes
 ```json
 {
   "success": false,
-  "message": "Question, answer, and creatorId are required."
+  "message": "Hint, answer, and creatorId are required."
 }
 ```
 
@@ -772,10 +772,11 @@ GET /api/quizzes/user/1
   quizzes: Array<{
     id: number,
     creator_id: number,
-    question: string,
-    answer: string,
+    hint: string,           // 정답을 찾기 위한 힌트
+    answer: string,         // 정답
+    is_solve: boolean,      // 퀴즈 풀이 여부 (0: 미풀이, 1: 풀이완료)
     matching_id: number,
-    created_at: string  // ISO 8601 형식
+    created_at: string      // ISO 8601 형식
   }>
 }
 ```
@@ -789,16 +790,18 @@ GET /api/quizzes/user/1
     {
       "id": 7,
       "creator_id": 1,
-      "question": "우리가 처음 만난 장소는?",
+      "hint": "우리가 처음 만난 장소",
       "answer": "카페 봄",
+      "is_solve": 0,
       "matching_id": 3,
       "created_at": "2025-12-03T10:35:00.000Z"
     },
     {
       "id": 5,
       "creator_id": 2,
-      "question": "파트너가 좋아하는 색깔은?",
+      "hint": "파트너가 좋아하는 색깔",
       "answer": "파란색",
+      "is_solve": 1,
       "matching_id": 3,
       "created_at": "2025-12-02T09:15:00.000Z"
     }
