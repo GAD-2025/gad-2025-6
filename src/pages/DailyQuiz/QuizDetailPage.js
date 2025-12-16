@@ -101,6 +101,23 @@ const QuizHint = styled.div`
   text-align: left;
 `;
 
+const QuizImageWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  height: auto;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+`;
+
+const QuizImage = styled.img`
+  max-height: 200px;
+  object-fit: contain;
+  display: block;
+  border-radius: 12px;
+`;
+
 const QuizDate = styled.div`
   width: 100%;
   color: #979797;
@@ -154,6 +171,8 @@ const QuizDetailPage = () => {
   const [answer, setAnswer] = useState('');
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
+  const [showSubmitLimitModal, setShowSubmitLimitModal] = useState(false);
+  const [nextAttemptTime, setNextAttemptTime] = useState(null);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -203,8 +222,19 @@ const QuizDetailPage = () => {
         } else {
           setShowIncorrectModal(true);
         }
+        // 퀴즈 데이터 다시 가져오기 (submitted_at 업데이트 반영)
+        const updatedQuiz = await getQuizById(quizId);
+        if (updatedQuiz) {
+          setQuiz(updatedQuiz);
+        }
       } else {
-        alert(result.message || 'Failed to submit answer.');
+        // 429 에러 (제출 제한) 처리
+        if (result.next_attempt_available_at) {
+          setNextAttemptTime(result.next_attempt_available_at);
+          setShowSubmitLimitModal(true);
+        } else {
+          alert(result.message || 'Failed to submit answer.');
+        }
       }
     } catch (error) {
       console.error('Error submitting answer:', error);
@@ -218,6 +248,22 @@ const QuizDetailPage = () => {
     setShowCorrectModal(false);
     setShowIncorrectModal(false);
     navigate('/daily-quiz');
+  };
+
+  const handleCloseSubmitLimitModal = () => {
+    setShowSubmitLimitModal(false);
+    navigate('/daily-quiz');
+  };
+
+  const formatNextAttemptTime = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   const handleDeleteClick = async () => {
@@ -257,6 +303,13 @@ const QuizDetailPage = () => {
         </TopBarWrapper>
         <QuizCard>
           <QuizInfo>
+            {/* 이미지가 있으면 표시 */}
+            {quiz.image_url && (
+              <QuizImageWrapper>
+                <QuizImage src={quiz.image_url} alt="Quiz" />
+              </QuizImageWrapper>
+            )}
+
             {isCreator || quiz.is_solve ? (
               <QuizAnswer>{quiz.answer}</QuizAnswer>
             ) : (
@@ -301,8 +354,23 @@ const QuizDetailPage = () => {
             <br />
             But that one's off 😢
           </ModalTitle>
-          <ModalDescription>{`The answer is ${quiz.answer}.`}</ModalDescription>
+          <ModalDescription>You can try again tomorrow!</ModalDescription>
           <Button variant="quiz" onClick={handleConfirmModal}>
+            Confirm
+          </Button>
+        </ModalContent>
+      </Modal>
+      <Modal open={showSubmitLimitModal} onClose={handleCancelSubmit}>
+        <ModalContent>
+          <ModalTitle>
+            Oops! ⏰
+            <br />
+            You can only submit once per day
+          </ModalTitle>
+          <ModalDescription>
+            {nextAttemptTime && `Next attempt available: ${formatNextAttemptTime(nextAttemptTime)}`}
+          </ModalDescription>
+          <Button variant="quiz" onClick={handleCloseSubmitLimitModal}>
             Confirm
           </Button>
         </ModalContent>

@@ -49,7 +49,7 @@ export const getQuizById = async (quizId) => {
 
 /**
  * 새로운 퀴즈를 서버에 생성합니다.
- * @param {object} quizData - { hint: "힌트", answer: "답" } 형태의 객체
+ * @param {object} quizData - { hint: "힌트", answer: "답", image: File } 형태의 객체
  * @param {number} creatorId - 퀴즈를 생성하는 사용자의 ID
  * @returns {Promise<object>} API 응답 객체
  */
@@ -57,16 +57,21 @@ export const createQuiz = async (quizData, creatorId) => {
   if (!creatorId) {
     return { success: false, message: "User is not logged in." };
   }
+
+  // FormData를 사용하여 이미지와 함께 전송
+  const formData = new FormData();
+  formData.append('hint', quizData.hint);
+  formData.append('answer', quizData.answer);
+  formData.append('creatorId', creatorId);
+
+  if (quizData.image) {
+    formData.append('image', quizData.image);
+  }
+
   const response = await fetch(`${apiUrl}/api/quizzes`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      hint: quizData.hint,
-      answer: quizData.answer,
-      creatorId: creatorId, // 중요: 보안에 취약하므로 추후 인증 토큰 방식으로 변경해야 합니다.
-    }),
+    // FormData 사용 시 Content-Type 헤더를 설정하지 않음 (브라우저가 자동으로 설정)
+    body: formData,
   });
   return response.json();
 };

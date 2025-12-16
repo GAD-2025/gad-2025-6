@@ -6,18 +6,58 @@ const bcrypt = require('bcrypt');
 const morgan = require('morgan');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+const AWS = require('aws-sdk');
+const multerS3 = require('multer-s3');
 
 const app = express();
 const port = 3001;
 
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:3002'],
+    origin: ['https://todak.store', 'http://localhost:3000', 'http://localhost:3002'],
     credentials: true,
   })
 );
 app.use(express.json());
 app.use(morgan('dev'));
+
+// AWS S3 설정
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+const s3 = new AWS.S3();
+
+// Multer S3 설정 (이미지 업로드)
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    metadata: function (req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname);
+      cb(null, 'quiz-images/quiz-' + uniqueSuffix + ext);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB 제한
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  },
+});
 
 // MySQL Connection Pool 설정
 const pool = mysql.createPool({
@@ -81,19 +121,6 @@ async function initializeDatabase() {
 // 기본 라우트
 app.get('/', (req, res) => {
   res.send('Hello World! This is the backend server.');
-});
-
-// DB 연결 테스트를 위한 API 엔드포인트
-app.get('/api/test-db', async (req, res) => {
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT 1');
-    connection.release();
-    res.json({ success: true, message: 'Database connection successful!', data: rows });
-  } catch (error) {
-    console.error('Database connection error:', error);
-    res.status(500).json({ success: false, message: 'Database connection failed.' });
-  }
 });
 
 // Helper function to generate a random alphanumeric code
@@ -325,7 +352,7 @@ app.post('/api/letters', async (req, res) => {
       success: true,
       message: 'Letter saved successfully.',
       letterId: result.insertId,
-      letter: createdLetter[0]
+      letter: createdLetter[0],
     });
   } catch (error) {
     console.error('Error saving letter:', error);
@@ -421,8 +448,8 @@ app.patch('/api/letters/:letterId/read', async (req, res) => {
   }
 });
 
-// 퀴즈 생성 API 엔드포인트
-app.post('/api/quizzes', async (req, res) => {
+// 퀴즈 생성 API 엔드포인트 (이미지 업로드 지원)
+app.post('/api/quizzes', upload.single('image'), async (req, res) => {
   const { hint, answer, creatorId } = req.body;
 
   // 중요: creatorId는 보안을 위해 실제로는 인증 토큰에서 추출해야 합니다.
@@ -455,9 +482,12 @@ app.post('/api/quizzes', async (req, res) => {
       });
     }
 
+    // 이미지 URL 생성 (S3에 업로드된 경우)
+    const imageUrl = req.file ? req.file.location : null;
+
     const [result] = await connection.execute(
-      'INSERT INTO quizzes (creator_id, hint, answer, matching_id) VALUES (?, ?, ?, ?)',
-      [creatorId, hint, answer, matchingId]
+      'INSERT INTO quizzes (creator_id, hint, answer, image_url, matching_id) VALUES (?, ?, ?, ?, ?)',
+      [creatorId, hint, answer, imageUrl, matchingId]
     );
     connection.release();
     res
@@ -556,9 +586,9 @@ app.post('/api/quizzes/:quizId/submit', async (req, res) => {
   try {
     const connection = await pool.getConnection();
 
-    // 퀴즈 정보 조회
+    // 퀴즈 정보 조회 (submitted_at 포함)
     const [quizzes] = await connection.execute(
-      'SELECT id, answer, is_solve FROM quizzes WHERE id = ?',
+      'SELECT id, answer, is_solve, submitted_at FROM quizzes WHERE id = ?',
       [quizId]
     );
 
@@ -578,24 +608,52 @@ app.post('/api/quizzes/:quizId/submit', async (req, res) => {
       });
     }
 
+    // 24시간 제한 체크
+    if (quiz.submitted_at) {
+      const lastSubmit = new Date(quiz.submitted_at);
+      const now = new Date();
+      const hoursSinceSubmit = (now - lastSubmit) / (1000 * 60 * 60);
+
+      if (hoursSinceSubmit < 24) {
+        const nextAvailable = new Date(lastSubmit.getTime() + 24 * 60 * 60 * 1000);
+        connection.release();
+        return res.status(429).json({
+          success: false,
+          message: 'You can only submit once per day.',
+          next_attempt_available_at: nextAvailable.toISOString(),
+          hours_remaining: Math.ceil(24 - hoursSinceSubmit),
+        });
+      }
+    }
+
     // 정답 확인 (대소문자 구분 없이, 공백 제거 후 비교)
     const isCorrect = answer.trim().toLowerCase() === quiz.answer.trim().toLowerCase();
 
-    // 제출 기록이 남으면 is_solve를 1로 업데이트 (정답/오답 무관)
-    await connection.execute('UPDATE quizzes SET is_solve = 1 WHERE id = ?', [quizId]);
-    connection.release();
-
     if (isCorrect) {
+      // 정답: is_solve = 1, submitted_at = NOW()
+      await connection.execute(
+        'UPDATE quizzes SET is_solve = 1, submitted_at = NOW() WHERE id = ?',
+        [quizId]
+      );
+      connection.release();
+
       return res.status(200).json({
         success: true,
         correct: true,
         message: 'Correct answer! Quiz solved successfully.',
       });
     } else {
+      // 오답: is_solve 유지, submitted_at = NOW()
+      await connection.execute('UPDATE quizzes SET submitted_at = NOW() WHERE id = ?', [quizId]);
+
+      const nextAvailable = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      connection.release();
+
       return res.status(200).json({
         success: true,
         correct: false,
-        message: 'Incorrect answer. Please try again.',
+        message: 'Incorrect answer. You can try again tomorrow.',
+        next_attempt_available_at: nextAvailable.toISOString(),
       });
     }
   } catch (error) {
@@ -965,7 +1023,83 @@ app.post('/api/matching', async (req, res) => {
   }
 });
 
-// 매칭 정보 조회
+// matching_id를 기반으로 파트너 정보 조회 (더 구체적인 라우트를 먼저 정의)
+app.get('/api/matching/:matchingId/partner/:userId', async (req, res) => {
+  const { matchingId, userId } = req.params;
+
+  if (!matchingId || !userId) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Matching ID and User ID are required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // 매칭 정보 조회
+    const [matchings] = await connection.execute(
+      `SELECT m.id as matching_id, m.user1_id, m.user2_id,
+              u1.id as u1_id, u1.name as u1_name, u1.email as u1_email, u1.user_code as u1_code,
+              u1.country as u1_country, u1.timezone as u1_timezone, u1.created_at as u1_created_at,
+              u2.id as u2_id, u2.name as u2_name, u2.email as u2_email, u2.user_code as u2_code,
+              u2.country as u2_country, u2.timezone as u2_timezone, u2.created_at as u2_created_at
+       FROM matching m
+       JOIN users u1 ON m.user1_id = u1.id
+       JOIN users u2 ON m.user2_id = u2.id
+       WHERE m.id = ?`,
+      [matchingId]
+    );
+
+    connection.release();
+
+    if (matchings.length === 0) {
+      return res.status(404).json({ success: false, message: 'Matching not found.' });
+    }
+
+    const matching = matchings[0];
+    const currentUserId = parseInt(userId);
+
+    // 현재 사용자가 이 매칭에 속해 있는지 확인
+    if (matching.user1_id !== currentUserId && matching.user2_id !== currentUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not part of this matching.',
+      });
+    }
+
+    // 파트너 정보 결정 (자신이 user1이면 user2가 파트너, 반대도 마찬가지)
+    const isUser1 = matching.user1_id === currentUserId;
+    const partner = isUser1
+      ? {
+          id: matching.u2_id,
+          name: matching.u2_name,
+          email: matching.u2_email,
+          user_code: matching.u2_code,
+          country: matching.u2_country,
+          timezone: matching.u2_timezone,
+          created_at: matching.u2_created_at,
+        }
+      : {
+          id: matching.u1_id,
+          name: matching.u1_name,
+          email: matching.u1_email,
+          user_code: matching.u1_code,
+          country: matching.u1_country,
+          timezone: matching.u1_timezone,
+          created_at: matching.u1_created_at,
+        };
+
+    res.status(200).json({
+      success: true,
+      partner: partner,
+    });
+  } catch (error) {
+    console.error('Error fetching partner info:', error);
+    res.status(500).json({ success: false, message: 'Server error while fetching partner info.' });
+  }
+});
+
+// 매칭 정보 조회 (userId로)
 app.get('/api/matching/user/:userId', async (req, res) => {
   const { userId } = req.params;
 
@@ -1036,80 +1170,6 @@ app.get('/api/matching/user/:userId', async (req, res) => {
   }
 });
 
-// matching_id를 기반으로 파트너 정보 조회
-app.get('/api/matching/:matchingId/partner/:userId', async (req, res) => {
-  const { matchingId, userId } = req.params;
-
-  if (!matchingId || !userId) {
-    return res.status(400).json({ success: false, message: 'Matching ID and User ID are required.' });
-  }
-
-  try {
-    const connection = await pool.getConnection();
-
-    // 매칭 정보 조회
-    const [matchings] = await connection.execute(
-      `SELECT m.id as matching_id, m.user1_id, m.user2_id,
-              u1.id as u1_id, u1.name as u1_name, u1.email as u1_email, u1.user_code as u1_code,
-              u1.country as u1_country, u1.timezone as u1_timezone, u1.created_at as u1_created_at,
-              u2.id as u2_id, u2.name as u2_name, u2.email as u2_email, u2.user_code as u2_code,
-              u2.country as u2_country, u2.timezone as u2_timezone, u2.created_at as u2_created_at
-       FROM matching m
-       JOIN users u1 ON m.user1_id = u1.id
-       JOIN users u2 ON m.user2_id = u2.id
-       WHERE m.id = ?`,
-      [matchingId]
-    );
-
-    connection.release();
-
-    if (matchings.length === 0) {
-      return res.status(404).json({ success: false, message: 'Matching not found.' });
-    }
-
-    const matching = matchings[0];
-    const currentUserId = parseInt(userId);
-
-    // 현재 사용자가 이 매칭에 속해 있는지 확인
-    if (matching.user1_id !== currentUserId && matching.user2_id !== currentUserId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are not part of this matching.'
-      });
-    }
-
-    // 파트너 정보 결정 (자신이 user1이면 user2가 파트너, 반대도 마찬가지)
-    const isUser1 = matching.user1_id === currentUserId;
-    const partner = isUser1
-      ? {
-          id: matching.u2_id,
-          name: matching.u2_name,
-          email: matching.u2_email,
-          user_code: matching.u2_code,
-          country: matching.u2_country,
-          timezone: matching.u2_timezone,
-          created_at: matching.u2_created_at,
-        }
-      : {
-          id: matching.u1_id,
-          name: matching.u1_name,
-          email: matching.u1_email,
-          user_code: matching.u1_code,
-          country: matching.u1_country,
-          timezone: matching.u1_timezone,
-          created_at: matching.u1_created_at,
-        };
-
-    res.status(200).json({
-      success: true,
-      partner: partner,
-    });
-  } catch (error) {
-    console.error('Error fetching partner info:', error);
-    res.status(500).json({ success: false, message: 'Server error while fetching partner info.' });
-  }
-});
-
 // 매칭 해제
 app.delete('/api/matching/:matchingId', async (req, res) => {
   const { matchingId } = req.params;
@@ -1144,7 +1204,7 @@ async function startServer() {
     await initializeDatabase();
 
     // 서버 시작
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
       console.log(`Backend server listening at http://localhost:${port}`);
       console.log('Access the DB test endpoint at http://localhost:3001/api/test-db');
     });

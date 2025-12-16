@@ -14,9 +14,29 @@ function CreateQuizPage() {
   const { user } = useAuth();
   const [hint, setHint] = useState('');
   const [answer, setAnswer] = useState('');
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const handleBackClick = () => {
     navigate(-1);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      // 이미지 미리보기
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImage(null);
+    setImagePreview(null);
   };
 
   const handleCreateQuiz = async () => {
@@ -30,7 +50,7 @@ function CreateQuizPage() {
     }
 
     try {
-      const response = await createQuiz({ hint, answer }, user.id);
+      const response = await createQuiz({ hint, answer, image }, user.id);
       if (response.success) {
         navigate('/daily-quiz');
       } else {
@@ -76,6 +96,25 @@ function CreateQuizPage() {
               flex: 1,
             }}
           />
+        </Field>
+
+        <Field label="Add an image (optional)" variant="quiz">
+          {imagePreview ? (
+            <ImagePreviewContainer>
+              <ImagePreview src={imagePreview} alt="Quiz preview" />
+              <RemoveImageButton onClick={handleRemoveImage}>✕</RemoveImageButton>
+            </ImagePreviewContainer>
+          ) : (
+            <ImageUploadLabel>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ display: 'none' }}
+              />
+              <ImageUploadText>📷 Click to upload an image</ImageUploadText>
+            </ImageUploadLabel>
+          )}
         </Field>
 
         <Button disabled={!isSaveButtonActive} onClick={handleCreateQuiz} variant="quiz">
@@ -131,4 +170,66 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+`;
+
+const ImageUploadLabel = styled.label`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  border: 2px dashed #d5d5d5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  &:hover {
+    border-color: #ffc90f;
+    background-color: #fff8e2;
+  }
+`;
+
+const ImageUploadText = styled.div`
+  color: #979797;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+`;
+
+const ImagePreviewContainer = styled.div`
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+`;
+
+const ImagePreview = styled.img`
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  background-color: #fafafa;
+`;
+
+const RemoveImageButton = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
 `;

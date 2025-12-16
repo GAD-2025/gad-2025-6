@@ -104,8 +104,6 @@ const MainLayout = () => {
         backgroundSize: isHomePage ? 'cover' : 'auto',
         backgroundPosition: 'center',
         boxSizing: 'border-box',
-
-        border: '1px solid violet',
       }}
     >
       <div

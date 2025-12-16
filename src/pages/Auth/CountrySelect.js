@@ -51,6 +51,10 @@ const StyledSelect = styled.select`
 `;
 
 const DropdownIcon = styled.div`
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;

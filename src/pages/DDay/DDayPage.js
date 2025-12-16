@@ -5,6 +5,7 @@ import { getDdaysByMatchingId } from '../../api/dday';
 import { getBucketListsByMatchingId, updateBucketList } from '../../api/bucketlist';
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import FloatingAddButton from '../../components/common/FloatingAddButton';
+import chick from '../../assets/images/chick.png';
 
 const DDayPage = () => {
   const navigate = useNavigate();
@@ -111,72 +112,88 @@ const DDayPage = () => {
       <ContentWrapper>
         {activeTab === 'dday' ? (
           <>
-            <DDayList>
-              {ddayList.map((item) => (
-                <DDayItem key={item.id} onClick={() => handleDDayItemClick(item)}>
-                  <DDayContent>
-                    <DDayItemInfo>
-                      <DDayItemDate>{renderDateFormat(item.date)}</DDayItemDate>
-                      <DDayItemTitle>{item.title}</DDayItemTitle>
-                    </DDayItemInfo>
-                    <DDayItemDDay>{calculateDday(item.date)}</DDayItemDDay>
-                  </DDayContent>
-                </DDayItem>
-              ))}
-            </DDayList>
+            {ddayList.length === 0 ? (
+              <EmptyContainer>
+                <EmptyImg src={chick} alt="No D-days" />
+                <EmptyText>Add your special day!</EmptyText>
+              </EmptyContainer>
+            ) : (
+              <DDayList>
+                {ddayList.map((item) => (
+                  <DDayItem key={item.id} onClick={() => handleDDayItemClick(item)}>
+                    <DDayContent>
+                      <DDayItemInfo>
+                        <DDayItemDate>{renderDateFormat(item.date)}</DDayItemDate>
+                        <DDayItemTitle>{item.title}</DDayItemTitle>
+                      </DDayItemInfo>
+                      <DDayItemDDay>{calculateDday(item.date)}</DDayItemDDay>
+                    </DDayContent>
+                  </DDayItem>
+                ))}
+              </DDayList>
+            )}
           </>
         ) : (
-          <BucketListContainer>
-            {bucketList
-              .sort((a, b) => a.is_completed - b.is_completed)
-              .map((item) => (
-                <BucketListItem key={item.id} onClick={() => handleBucketListItemClick(item)}>
-                  <BucketListContent completed={item.is_completed}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5.07px' }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleComplete(item.id, item.is_completed);
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          padding: 0,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          width: '18px',
-                          height: '18px',
-                        }}
-                      >
-                        {item.is_completed ? (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="17"
-                            viewBox="0 0 16 17"
-                            fill="none"
+          <>
+            {bucketList.length === 0 ? (
+              <EmptyContainer>
+                <EmptyImg src={chick} alt="No bucket list items" />
+                <EmptyText>Add your bucket list!</EmptyText>
+              </EmptyContainer>
+            ) : (
+              <BucketListContainer>
+                {bucketList
+                  .sort((a, b) => a.is_completed - b.is_completed)
+                  .map((item) => (
+                    <BucketListItem key={item.id} onClick={() => handleBucketListItemClick(item)}>
+                      <BucketListContent completed={item.is_completed}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5.07px' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleComplete(item.id, item.is_completed);
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              width: '18px',
+                              height: '18px',
+                            }}
                           >
-                            <rect width="16" height="17" rx="1.26812" fill="#4E78D2" />
-                            <path
-                              d="M13.8659 4.69244C13.523 4.3395 13.0088 4.3395 12.6659 4.69244L6.23733 11.3101L3.58019 8.57479C3.23733 8.22185 2.72305 8.22185 2.38019 8.57479C2.03733 8.92773 2.03733 9.45715 2.38019 9.81009L5.63733 13.163C5.80876 13.3395 5.98019 13.4277 6.23733 13.4277C6.49448 13.4277 6.6659 13.3395 6.83733 13.163L13.8659 5.92773C14.2088 5.57479 14.2088 5.04538 13.8659 4.69244Z"
-                              fill="white"
-                            />
-                          </svg>
-                        ) : (
-                          <EmptyCheckbox />
-                        )}
-                      </button>
-                      <BucketListItemInfo>
-                        <BucketListItemText completed={item.is_completed}>
-                          {item.title}
-                        </BucketListItemText>
-                      </BucketListItemInfo>
-                    </div>
-                  </BucketListContent>
-                </BucketListItem>
-              ))}
-          </BucketListContainer>
+                            {item.is_completed ? (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="17"
+                                viewBox="0 0 16 17"
+                                fill="none"
+                              >
+                                <rect width="16" height="17" rx="1.26812" fill="#4E78D2" />
+                                <path
+                                  d="M13.8659 4.69244C13.523 4.3395 13.0088 4.3395 12.6659 4.69244L6.23733 11.3101L3.58019 8.57479C3.23733 8.22185 2.72305 8.22185 2.38019 8.57479C2.03733 8.92773 2.03733 9.45715 2.38019 9.81009L5.63733 13.163C5.80876 13.3395 5.98019 13.4277 6.23733 13.4277C6.49448 13.4277 6.6659 13.3395 6.83733 13.163L13.8659 5.92773C14.2088 5.57479 14.2088 5.04538 13.8659 4.69244Z"
+                                  fill="white"
+                                />
+                              </svg>
+                            ) : (
+                              <EmptyCheckbox />
+                            )}
+                          </button>
+                          <BucketListItemInfo>
+                            <BucketListItemText completed={item.is_completed}>
+                              {item.title}
+                            </BucketListItemText>
+                          </BucketListItemInfo>
+                        </div>
+                      </BucketListContent>
+                    </BucketListItem>
+                  ))}
+              </BucketListContainer>
+            )}
+          </>
         )}
       </ContentWrapper>
       <FloatingAddButton onClick={handleAddButtonClick} />
@@ -198,6 +215,7 @@ const PageWrapper = styled.div`
 
 const ContentWrapper = styled.div`
   width: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -363,4 +381,26 @@ const BucketListItemText = styled.div`
   font-weight: 700;
   text-decoration: ${(props) => (props.completed ? 'line-through' : 'none')};
   word-wrap: break-word;
+`;
+
+const EmptyContainer = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+`;
+
+const EmptyImg = styled.img``;
+
+const EmptyText = styled.div`
+  color: #d5d5d5;
+  text-align: center;
+  font-family: Pangolin;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%;
 `;
