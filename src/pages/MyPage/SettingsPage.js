@@ -32,6 +32,10 @@ function SettingsPage() {
           <Input type="email" value={user?.email || ''} readOnly placeholder="Email" />
         </Field>
 
+        <Field label="Country" variant="signin">
+          <Input type="text" value={user?.country || ''} readOnly placeholder="Country" />
+        </Field>
+
         <Field label="My Invitation Code" variant="signin">
           <Input type="text" value={user?.user_code || ''} readOnly placeholder="Invitation Code" />
         </Field>

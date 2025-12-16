@@ -13,13 +13,13 @@ export const login = async (email, password) => {
 };
 
 // A mock function to simulate a signup API call
-export const signup = async (name, email, password) => {
+export const signup = async (name, email, password, country, timezone) => {
   const response = await fetch(`${apiUrl}/api/auth/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, country, timezone }),
   });
   return response.json();
 };
@@ -27,6 +27,17 @@ export const signup = async (name, email, password) => {
 // Get user information by userId
 export const getUserById = async (userId) => {
   const response = await fetch(`${apiUrl}/api/users/${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.json();
+};
+
+// Get partner information by matchingId and userId
+export const getPartnerByMatchingId = async (matchingId, userId) => {
+  const response = await fetch(`${apiUrl}/api/matching/${matchingId}/partner/${userId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

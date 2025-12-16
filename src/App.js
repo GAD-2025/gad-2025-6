@@ -29,6 +29,9 @@ import MainLayout from './components/layout/MainLayout';
 import PrivateRoute from './components/common/PrivateRoute';
 import { useAuth } from './context/AuthContext';
 import RegistrationComplete from './pages/Auth/RegistrationComplete';
+import CountrySelect from './pages/Auth/CountrySelect';
+import LetterSented from './pages/SlowLetter/LetterSented';
+import SlowLetterSentDetailPage from './pages/SlowLetter/SlowLetterSentDetailPage';
 
 function App() {
   const { user } = useAuth();
@@ -41,6 +44,7 @@ function App() {
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/signup/password" element={<PasswordSignUpPage />} />
+          <Route path="/signup/country" element={<CountrySelect />} />
           <Route path="/signup/invitation" element={<InvitationCodePage />} />
           <Route path="/signup/waiting" element={<WaitingForPartnerPage />} />
           <Route path="/registration" element={<RegistrationComplete />} />
@@ -60,6 +64,8 @@ function App() {
             <Route path="/dday/edit/:ddayId" element={<EditDDayPage />} />
             <Route path="/slow-letter" element={<SlowLetterPage />} />
             <Route path="/slow-letter/write" element={<WriteLetterPage />} />
+            <Route path="/slow-letter/sented" element={<LetterSented />} />
+            <Route path="/slow-letter/sent/:letterId" element={<SlowLetterSentDetailPage />} />
             <Route path="/slow-letter/:letterId" element={<SlowLetterDetailPage />} />
             <Route path="/my-page" element={<MyPage />} />
             <Route path="/my-page/settings" element={<SettingsPage />} />

@@ -64,9 +64,14 @@ const BottomNav = () => {
   const location = useLocation();
 
   if (
-    ['/signin', '/signup', '/signup/password', '/signup/invitation', '/registration'].includes(
-      location.pathname
-    )
+    [
+      '/signin',
+      '/signup',
+      '/signup/password',
+      '/signup/invitation',
+      '/registration',
+      '/signup/country',
+    ].includes(location.pathname)
   ) {
     return null;
   }

@@ -1,252 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getBucketListById, updateBucketList } from '../../api/bucketlist'; // Import getBucketListById and updateBucketList
-import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg'; // Assuming this is the arrow left icon
-
-const PageContainer = styled.div`
-  width: 100%;
-  height: 100%;
-  position: relative;
-  background: white;
-  overflow: hidden;
-`;
-
-const ContentWrapper = styled.div`
-  width: 390px;
-  left: 0px;
-  top: 0px;
-  position: absolute;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 408px;
-  display: inline-flex;
-`;
-
-const HeaderSection = styled.div`
-  align-self: stretch;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  display: flex;
-`;
-
-const StatusBar = styled.div`
-  align-self: stretch;
-  height: 44px;
-  position: relative;
-  overflow: hidden;
-`;
-
-const WifiIcon = styled.div`
-  width: 17.48px;
-  height: 12.62px;
-  left: 314.26px;
-  top: 17.48px;
-  position: absolute;
-  background: var(--Light-Ink, black);
-`;
-
-const BatteryIcon = styled.div`
-  width: 25.83px;
-  height: 12.14px;
-  left: 337.56px;
-  top: 17.48px;
-  position: absolute;
-  & > div {
-    width: 19.61px;
-    height: 8.40px;
-    left: 1.87px;
-    top: 1.87px;
-    position: absolute;
-    background: var(--Light-Ink, black);
-  }
-`;
-
-const TimeText = styled.div`
-  left: 36.87px;
-  top: 15.54px;
-  position: absolute;
-  text-align: center;
-  color: var(--Light-Ink, black);
-  font-size: 17.48px;
-  font-family: SF Pro Display;
-  font-weight: 600;
-  line-height: 17.48px;
-  word-wrap: break-word;
-`;
-
-const TopBar = styled.div`
-  align-self: stretch;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 16px;
-  display: flex;
-`;
-
-const TopBarDefault = styled.div`
-  align-self: stretch;
-  height: 44px;
-  position: relative;
-  overflow: hidden;
-`;
-
-const StyledArrowLeftIcon = styled(ArrowLeftIcon)` // Use StyledArrowLeftIcon as a component
-  width: 24px;
-  height: 24px;
-  left: 20px;
-  top: 10.50px;
-  position: absolute;
-  cursor: pointer;
-  path {
-    fill: var(--Grayscale-900, #1A1B1E); // Ensure the icon color is correct
-  }
-`;
-
-const PageTitle = styled.div`
-  left: 122px;
-  top: 10px;
-  position: absolute;
-  text-align: center;
-  color: var(--Black, black);
-  font-size: 20px;
-  font-family: Pretendard;
-  font-weight: 700;
-  word-wrap: break-word;
-`;
-
-const FormSection = styled.div`
-  width: 350px;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 24px;
-  display: flex;
-`;
-
-const InputGroup = styled.div`
-  align-self: stretch;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 8px;
-  display: flex;
-`;
-
-const InputLabel = styled.div`
-  align-self: stretch;
-  color: #84AF25;
-  font-size: 24px;
-  font-family: Pangolin;
-  font-weight: 400;
-  word-wrap: break-word;
-`;
-
-const InputField = styled.div`
-  width: 350px;
-  height: 56px;
-  padding: 18px;
-  background: white;
-  overflow: hidden;
-  border-radius: 20px;
-  outline: 1px #EAEAEA solid;
-  outline-offset: -1px;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  display: inline-flex;
-`;
-
-const StyledInput = styled.input`
-  flex: 1 1 0;
-  align-self: stretch;
-  color: #2C2C2C;
-  font-size: 16px;
-  font-family: Pretendard;
-  font-weight: 700;
-  word-wrap: break-word;
-  border: none;
-  outline: none;
-  background: transparent;
-  box-sizing: border-box;
-  &::placeholder {
-    color: #DBDBDB;
-    font-weight: 400;
-  }
-`;
-
-const StyledTextArea = styled.textarea`
-  width: 100%;
-  flex-grow: 1;
-  min-height: 100px;
-  color: #2C2C2C;
-  font-size: 16px;
-  font-family: Pretendard;
-  font-weight: 700;
-  word-wrap: break-word;
-  border: none;
-  outline: none;
-  resize: vertical;
-  background: transparent;
-  box-sizing: border-box;
-  overflow-y: auto;
-  &::placeholder {
-    color: #DBDBDB;
-    font-weight: 400;
-  }
-`;
-
-const CalendarIcon = styled.div`
-  width: 20px;
-  height: 22px;
-  background: #404048;
-`;
-
-const SaveButton = styled.div`
-  width: 350px;
-  padding-left: 74px;
-  padding-right: 74px;
-  padding-top: 18px;
-  padding-bottom: 18px;
-  background: ${(props) => (props.active ? '#84AF25' : '#D5D5D5')};
-  overflow: hidden;
-  border-radius: 28px;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  display: inline-flex;
-  cursor: ${(props) => (props.active ? 'pointer' : 'default')};
-`;
-
-const SaveButtonText = styled.div`
-  text-align: center;
-  justify-content: center;
-  display: flex;
-  flex-direction: column;
-  color: #F1F1F1;
-  font-size: 20px;
-  font-family: Pretendard;
-  font-weight: 700;
-  word-wrap: break-word;
-`;
-
-const BottomBar = styled.div`
-  align-self: stretch;
-  height: 36px;
-  position: relative;
-`;
-
-const BottomBarIndicator = styled.div`
-  width: 134px;
-  height: 5px;
-  left: 128px;
-  top: 23px;
-  position: absolute;
-  background: black;
-  border-radius: 100px;
-`;
+import styled from 'styled-components';
+import { getBucketListById, updateBucketList } from '../../api/bucketlist';
+import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg';
+import Field from '../../components/common/Field';
+import Input from '../../components/common/Input';
+import Textarea from '../../components/common/Textarea';
+import Button from '../../components/common/Button';
 
 function EditBucketListPage() {
   const navigate = useNavigate();
@@ -254,9 +14,11 @@ function EditBucketListPage() {
   const location = useLocation();
 
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState(''); // Changed from targetDate to description
+  const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const isSaveButtonActive = title.trim() !== '' && content.trim() !== '';
 
   useEffect(() => {
     const fetchAndSetBucketList = async () => {
@@ -278,7 +40,7 @@ function EditBucketListPage() {
 
       if (itemToEdit) {
         setTitle(itemToEdit.title);
-        setDescription(itemToEdit.content || ''); // Use content for description
+        setContent(itemToEdit.content || '');
       } else if (!error) {
         setError("Bucket List not found for editing.");
       }
@@ -292,16 +54,16 @@ function EditBucketListPage() {
   };
 
   const handleSave = async () => {
-    if (!title.trim() || !description.trim()) {
-        alert('Title and description cannot be empty.');
-        return;
+    if (!isSaveButtonActive) {
+      return;
     }
-    try {
-      const bucketListUpdateData = {
-        title,
-        content: description,
-      };
 
+    const bucketListUpdateData = {
+      title,
+      content,
+    };
+
+    try {
       const response = await updateBucketList(bucketListId, bucketListUpdateData);
       if (response.success) {
         navigate('/dday');
@@ -322,76 +84,95 @@ function EditBucketListPage() {
     return <div>Error: {error}</div>;
   }
 
-  if (!title && !description && !loading) { // Check if no data and not loading
+  if (!title && !content && !loading) {
     return <div>Bucket List not found for editing.</div>;
   }
 
   return (
-    <PageContainer>
-      <ContentWrapper>
-        <HeaderSection>
-          <StatusBar>
-            <WifiIcon />
-            <BatteryIcon>
-              <div />
-            </BatteryIcon>
-            <TimeText>19:02</TimeText>
-          </StatusBar>
-          <TopBar>
-            <TopBarDefault>
-              <StyledArrowLeftIcon onClick={handleBackClick} /> {/* Use the styled component */}
-              <PageTitle>Edit Bucket List Item</PageTitle>
-            </TopBarDefault>
-          </TopBar>
-        </HeaderSection>
-        <FormSection style={{ paddingLeft: 20, paddingRight: 20 }}>
-          <InputGroup>
-            <InputLabel>Bucket List Item</InputLabel>
-            <InputField>
-              <StyledInput
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Title of your bucket list item"
-              />
-            </InputField>
-          </InputGroup>
-          <InputGroup>
-            <InputLabel>Description</InputLabel>
-            <div style={{
-                width: 350,
-                paddingTop: 18,
-                paddingBottom: 18,
-                paddingLeft: 24,
-                paddingRight: 24,
-                background: 'white',
-                overflow: 'hidden',
-                borderRadius: 20,
-                outline: '1px #EAEAEA solid',
-                outlineOffset: '-1px',
-                display: 'flex',
-                flexDirection: 'column',
-                boxSizing: 'border-box'
-            }}>
-              <StyledTextArea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description of your bucket list item"
-              />
-            </div>
-          </InputGroup>
-          {/* Removed Target Date Input Group as it's not supported by API */}
+    <PageWrapper>
+      <TopBarWrapper>
+        <BackButton onClick={handleBackClick}>
+          <ArrowLeftIcon />
+        </BackButton>
+        <PageTitle>Edit Bucket List</PageTitle>
+      </TopBarWrapper>
 
-          <SaveButton active onClick={handleSave}>
-            <SaveButtonText>Save</SaveButtonText>
-          </SaveButton>
-        </FormSection>
-        <BottomBar>
-          <BottomBarIndicator />
-        </BottomBar>
-      </ContentWrapper>
-    </PageContainer>
+      <ContentContainer>
+        <Field label="Goal Name" variant="dday">
+          <Input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Name of the bucket goal"
+          />
+        </Field>
+
+        <Field
+          label="Details"
+          variant="dday"
+          style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+        >
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Details of the goal"
+            style={{
+              flex: 1,
+            }}
+          />
+        </Field>
+
+        <Button disabled={!isSaveButtonActive} onClick={handleSave} variant="dday">
+          Save
+        </Button>
+      </ContentContainer>
+    </PageWrapper>
   );
 }
 
 export default EditBucketListPage;
+
+const PageWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+`;
+
+const TopBarWrapper = styled.div`
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const BackButton = styled.button`
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+`;
+
+const PageTitle = styled.div`
+  text-align: center;
+  color: black;
+  font-size: 20px;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+`;
+
+const ContentContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;

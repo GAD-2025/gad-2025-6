@@ -6,11 +6,14 @@ import { ReactComponent as LetterIcon } from '../../assets/icons/letter.svg';
 import { useAuth } from '../../context/AuthContext';
 import { getDdaysByMatchingId } from '../../api/dday';
 import { getQuizzes } from '../../api/quiz';
+import { getPartnerByMatchingId } from '../../api/auth';
+import { getLetters } from '../../api/letter';
 
 const HomePage = () => {
   const [ddays, setDdays] = React.useState([]);
   const [quizzes, setQuizzes] = React.useState([]);
-  console.log(quizzes);
+  const [partnerTimezone, setPartnerTimezone] = React.useState('');
+  const [unreadLetterCount, setUnreadLetterCount] = React.useState(0);
   const navigate = useNavigate(); // Initialize useNavigate
   const { user } = useAuth(); // Use useAuth hook instead of localStorage
 
@@ -23,6 +26,23 @@ const HomePage = () => {
       navigate('/signin'); // Redirect to sign-in page if not authenticated
       return;
     }
+
+    const fetchPartnerInfo = async () => {
+      try {
+        const userId = user?.id;
+        const matchingId = user?.matching_id;
+
+        const result = await getPartnerByMatchingId(matchingId, userId);
+        if (result.success) {
+          setPartnerTimezone(result.partner.timezone);
+          localStorage.setItem('partner', JSON.stringify(result.partner));
+        } else {
+          console.error('Failed to fetch partner info');
+        }
+      } catch (error) {
+        console.error('Error fetching partner info:', error);
+      }
+    };
 
     // Fetch D-Days based on matching_id
     const fetchDdays = async () => {
@@ -57,8 +77,29 @@ const HomePage = () => {
       }
     };
 
+    const fetchUnreadLetters = async () => {
+      try {
+        const userId = user?.id;
+        if (!userId) {
+          setUnreadLetterCount(0);
+          return;
+        }
+        const letters = await getLetters(userId);
+        // 받은 편지 중 읽지 않은 편지 개수 계산
+        const unreadCount = letters.filter(
+          (letter) => letter.user_id !== userId && letter.is_read === 0
+        ).length;
+        setUnreadLetterCount(unreadCount);
+      } catch (error) {
+        console.error('Error fetching letters:', error);
+        setUnreadLetterCount(0);
+      }
+    };
+
     fetchDdays();
     fetchQuizzes();
+    fetchPartnerInfo();
+    fetchUnreadLetters();
   }, [user, navigate]);
 
   const calculateDDay = (targetDate) => {
@@ -82,7 +123,10 @@ const HomePage = () => {
     <ContentWrapper>
       <CardsWrapper>
         <CardRow>
-          <DDayCard onClick={() => navigate(`/dday/${dday?.id}`)} style={{ cursor: 'pointer' }}>
+          <DDayCard
+            onClick={() => navigate(dday ? `/dday/${dday?.id}` : '/dday')}
+            style={{ cursor: 'pointer' }}
+          >
             <DDayValue>{calculateDDay(dday?.date)}</DDayValue>
             <DDayText>
               {dday?.title ?? (
@@ -99,10 +143,13 @@ const HomePage = () => {
           <NewLetterCard onClick={() => navigate('/slow-letter')} style={{ cursor: 'pointer' }}>
             <NewLetterText>New!</NewLetterText>
             <LetterIcon />
-            <NewLetterCount>2</NewLetterCount>
+            {unreadLetterCount > 0 && <NewLetterCount>{unreadLetterCount}</NewLetterCount>}
           </NewLetterCard>
         </CardRow>
-        <Link to={`/daily-quiz/${quiz?.id}`} style={{ textDecoration: 'none' }}>
+        <Link
+          to={quiz ? `/daily-quiz/${quiz?.id}` : '/daily-quiz'}
+          style={{ textDecoration: 'none' }}
+        >
           <QuizCard>
             <QuizTitle>Daily Quiz</QuizTitle>
             <QuizQuestion>{quiz?.hint ?? 'Create a new quiz!'}</QuizQuestion>

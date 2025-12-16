@@ -108,9 +108,9 @@ const generateRandomCode = (length) => {
 
 // 회원가입 API 엔드포인트
 app.post('/api/auth/signup', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, country, timezone } = req.body;
 
-  if (!name || !email || !password) {
+  if (!name || !email || !password || !country || !timezone) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
@@ -149,8 +149,8 @@ app.post('/api/auth/signup', async (req, res) => {
 
     // 사용자 정보 저장
     const [result] = await connection.execute(
-      'INSERT INTO users (name, email, password, user_code) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, userCode]
+      'INSERT INTO users (name, email, password, user_code, country, timezone) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, userCode, country, timezone]
     );
 
     await connection.commit();
@@ -212,6 +212,8 @@ app.post('/api/auth/login', async (req, res) => {
         email: user.email,
         user_code: user.user_code, // Include user_code in the response
         matching_id: user.matching_id, // Include matching_id in the response
+        country: user.country, // Include country in the response
+        timezone: user.timezone, // Include timezone in the response
       },
     });
   } catch (error) {
@@ -233,7 +235,7 @@ app.get('/api/users/:userId', async (req, res) => {
 
     // userId로 사용자 찾기
     const [users] = await connection.execute(
-      'SELECT id, name, email, user_code, matching_id, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, user_code, matching_id, country, timezone, created_at FROM users WHERE id = ?',
       [userId]
     );
     connection.release();
@@ -252,6 +254,8 @@ app.get('/api/users/:userId', async (req, res) => {
         email: user.email,
         user_code: user.user_code,
         matching_id: user.matching_id,
+        country: user.country,
+        timezone: user.timezone,
         created_at: user.created_at,
       },
     });
@@ -263,15 +267,15 @@ app.get('/api/users/:userId', async (req, res) => {
 
 // 느린 편지 생성 API 엔드포인트
 app.post('/api/letters', async (req, res) => {
-  const { title, content, userId } = req.body;
+  const { content, userId, targetDate } = req.body;
 
   // 중요: 실제 프로덕션 환경에서는 요청 본문(body)에서 userId를 직접 받는 것은 매우 위험합니다.
   // 이 userId는 인증 토큰(JWT 등)을 통해 서버에서 직접 추출해야 안전합니다.
   // 현재 구조상 임시로 이 방법을 사용합니다.
-  if (!title || !content || !userId) {
+  if (!content || !userId || !targetDate) {
     return res
       .status(400)
-      .json({ success: false, message: 'Title, content, and userId are required.' });
+      .json({ success: false, message: 'Content, userId, and targetDate are required.' });
   }
 
   try {
@@ -297,14 +301,32 @@ app.post('/api/letters', async (req, res) => {
       });
     }
 
+    // targetDate를 MySQL DATETIME 형식으로 변환
+    // 2025-12-12T03:24 형식을 2025-12-12 03:24:00 형식으로 변환
+    let formattedTargetDate = targetDate;
+    if (targetDate.includes('T')) {
+      // ISO 8601 형식을 MySQL DATETIME 형식으로 변환 (로컬 시간 유지)
+      formattedTargetDate = targetDate.replace('T', ' ') + ':00';
+    }
+
     const [result] = await connection.execute(
-      'INSERT INTO slow_letters (user_id, title, content, matching_id) VALUES (?, ?, ?, ?)',
-      [userId, title, content, matchingId]
+      'INSERT INTO slow_letters (user_id, content, target_date, matching_id) VALUES (?, ?, ?, ?)',
+      [userId, content, formattedTargetDate, matchingId]
     );
+
+    // 생성된 편지 정보 조회
+    const [createdLetter] = await connection.execute(
+      'SELECT id, user_id, content, target_date, matching_id, is_read, created_at FROM slow_letters WHERE id = ?',
+      [result.insertId]
+    );
+
     connection.release();
-    res
-      .status(201)
-      .json({ success: true, message: 'Letter saved successfully.', letterId: result.insertId });
+    res.status(201).json({
+      success: true,
+      message: 'Letter saved successfully.',
+      letterId: result.insertId,
+      letter: createdLetter[0]
+    });
   } catch (error) {
     console.error('Error saving letter:', error);
     res.status(500).json({ success: false, message: 'Server error while saving letter.' });
@@ -353,6 +375,49 @@ app.get('/api/letters/user/:userId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching letters:', error);
     res.status(500).json({ success: false, message: 'Server error while fetching letters.' });
+  }
+});
+
+// 편지 읽음 상태 업데이트 API 엔드포인트
+app.patch('/api/letters/:letterId/read', async (req, res) => {
+  const { letterId } = req.params;
+  const { isRead } = req.body;
+
+  if (!letterId) {
+    return res.status(400).json({ success: false, message: 'Letter ID is required.' });
+  }
+
+  if (typeof isRead !== 'boolean') {
+    return res.status(400).json({ success: false, message: 'isRead must be a boolean value.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // 편지 존재 확인
+    const [letters] = await connection.execute('SELECT id FROM slow_letters WHERE id = ?', [
+      letterId,
+    ]);
+
+    if (letters.length === 0) {
+      connection.release();
+      return res.status(404).json({ success: false, message: 'Letter not found.' });
+    }
+
+    // is_read 상태 업데이트
+    await connection.execute('UPDATE slow_letters SET is_read = ? WHERE id = ?', [
+      isRead ? 1 : 0,
+      letterId,
+    ]);
+
+    connection.release();
+    res.status(200).json({
+      success: true,
+      message: 'Letter read status updated successfully.',
+    });
+  } catch (error) {
+    console.error('Error updating letter read status:', error);
+    res.status(500).json({ success: false, message: 'Server error while updating letter.' });
   }
 });
 
@@ -461,10 +526,7 @@ app.get('/api/quizzes/:quizId', async (req, res) => {
     const connection = await pool.getConnection();
 
     // 퀴즈 정보 조회
-    const [quizzes] = await connection.execute(
-      'SELECT * FROM quizzes WHERE id = ?',
-      [quizId]
-    );
+    const [quizzes] = await connection.execute('SELECT * FROM quizzes WHERE id = ?', [quizId]);
     connection.release();
 
     if (quizzes.length === 0) {
@@ -971,6 +1033,80 @@ app.get('/api/matching/user/:userId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching matching info:', error);
     res.status(500).json({ success: false, message: 'Server error while fetching matching info.' });
+  }
+});
+
+// matching_id를 기반으로 파트너 정보 조회
+app.get('/api/matching/:matchingId/partner/:userId', async (req, res) => {
+  const { matchingId, userId } = req.params;
+
+  if (!matchingId || !userId) {
+    return res.status(400).json({ success: false, message: 'Matching ID and User ID are required.' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // 매칭 정보 조회
+    const [matchings] = await connection.execute(
+      `SELECT m.id as matching_id, m.user1_id, m.user2_id,
+              u1.id as u1_id, u1.name as u1_name, u1.email as u1_email, u1.user_code as u1_code,
+              u1.country as u1_country, u1.timezone as u1_timezone, u1.created_at as u1_created_at,
+              u2.id as u2_id, u2.name as u2_name, u2.email as u2_email, u2.user_code as u2_code,
+              u2.country as u2_country, u2.timezone as u2_timezone, u2.created_at as u2_created_at
+       FROM matching m
+       JOIN users u1 ON m.user1_id = u1.id
+       JOIN users u2 ON m.user2_id = u2.id
+       WHERE m.id = ?`,
+      [matchingId]
+    );
+
+    connection.release();
+
+    if (matchings.length === 0) {
+      return res.status(404).json({ success: false, message: 'Matching not found.' });
+    }
+
+    const matching = matchings[0];
+    const currentUserId = parseInt(userId);
+
+    // 현재 사용자가 이 매칭에 속해 있는지 확인
+    if (matching.user1_id !== currentUserId && matching.user2_id !== currentUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not part of this matching.'
+      });
+    }
+
+    // 파트너 정보 결정 (자신이 user1이면 user2가 파트너, 반대도 마찬가지)
+    const isUser1 = matching.user1_id === currentUserId;
+    const partner = isUser1
+      ? {
+          id: matching.u2_id,
+          name: matching.u2_name,
+          email: matching.u2_email,
+          user_code: matching.u2_code,
+          country: matching.u2_country,
+          timezone: matching.u2_timezone,
+          created_at: matching.u2_created_at,
+        }
+      : {
+          id: matching.u1_id,
+          name: matching.u1_name,
+          email: matching.u1_email,
+          user_code: matching.u1_code,
+          country: matching.u1_country,
+          timezone: matching.u1_timezone,
+          created_at: matching.u1_created_at,
+        };
+
+    res.status(200).json({
+      success: true,
+      partner: partner,
+    });
+  } catch (error) {
+    console.error('Error fetching partner info:', error);
+    res.status(500).json({ success: false, message: 'Server error while fetching partner info.' });
   }
 });
 

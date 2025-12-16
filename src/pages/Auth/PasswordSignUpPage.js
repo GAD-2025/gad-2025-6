@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { signup, login as apiLogin } from '../../api/auth';
-import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Field from '../../components/common/Field';
@@ -10,7 +8,6 @@ import { ReactComponent as BackIcon } from '../../assets/icons/arrow-left.svg';
 const PasswordSignUpPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
   const { name, email } = location.state || {};
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -19,7 +16,7 @@ const PasswordSignUpPage = () => {
   const isButtonEnabled =
     password.length >= 0 && passwordConfirmation.length >= 0 && password === passwordConfirmation;
 
-  const handleSignUpClick = async () => {
+  const handleSignUpClick = () => {
     if (!isButtonEnabled) return;
 
     if (password !== passwordConfirmation) {
@@ -28,32 +25,14 @@ const PasswordSignUpPage = () => {
     }
     setError('');
 
-    try {
-      const signupResponse = await signup(name, email, password);
-      if (!signupResponse.success) {
-        setError(signupResponse.message || 'Sign up failed. Please try again.');
-        return;
-      }
-
-      // Automatically log in the user after successful signup
-      const loginResponse = await apiLogin(email, password);
-      if (loginResponse.success) {
-        login(loginResponse.user); // Update auth context
-
-        if (loginResponse.user.matching_id) {
-          navigate('/'); // Navigate to onboarding if matched
-        } else {
-          navigate('/signup/invitation'); // Navigate to invitation code step
-        }
-      } else {
-        setError(loginResponse.message || 'Login failed after sign up.');
-        // If auto-login fails, redirect to sign-in page so they can log in manually
-        navigate('/signin');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      console.error('Signup error:', err);
-    }
+    // Navigate to country selection with user data
+    navigate('/signup/country', {
+      state: {
+        name,
+        email,
+        password,
+      },
+    });
   };
 
   return (
