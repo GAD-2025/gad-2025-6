@@ -67,7 +67,7 @@ const MainLayout = () => {
         const now = new Date();
         const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
         const partnerTime = new Date(utcTime + totalOffsetMinutes * 60000);
-        const hour = partnerTime.getHours();
+        const hour = partnerTime.getUTCHours();
 
         // 6시부터 18시까지를 낮으로 판단
         return hour >= 6 && hour < 18;

@@ -69,6 +69,7 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   multipleStatements: true, // 여러 SQL 문 실행 허용
+  dateStrings: true,
 });
 
 // 데이터베이스 초기화 함수
@@ -586,9 +587,9 @@ app.post('/api/quizzes/:quizId/submit', async (req, res) => {
   try {
     const connection = await pool.getConnection();
 
-    // 퀴즈 정보 조회 (submitted_at 포함)
+    // 퀴즈 정보 조회 (attempt_count 포함)
     const [quizzes] = await connection.execute(
-      'SELECT id, answer, is_solve, submitted_at FROM quizzes WHERE id = ?',
+      'SELECT id, answer, is_solve, attempt_count FROM quizzes WHERE id = ?',
       [quizId]
     );
 
@@ -599,41 +600,38 @@ app.post('/api/quizzes/:quizId/submit', async (req, res) => {
 
     const quiz = quizzes[0];
 
-    // 이미 풀린 퀴즈인지 확인
+    // 이미 풀렸거나 3번 시도 완료 체크
     if (quiz.is_solve === 1) {
       connection.release();
       return res.status(400).json({
         success: false,
-        message: 'This quiz has already been solved.',
+        message: 'This quiz has already been solved or you have used all attempts.',
+        is_solve: true,
+        attempt_count: quiz.attempt_count,
+        remaining_attempts: 0,
       });
     }
 
-    // 24시간 제한 체크
-    if (quiz.submitted_at) {
-      const lastSubmit = new Date(quiz.submitted_at);
-      const now = new Date();
-      const hoursSinceSubmit = (now - lastSubmit) / (1000 * 60 * 60);
-
-      if (hoursSinceSubmit < 24) {
-        const nextAvailable = new Date(lastSubmit.getTime() + 24 * 60 * 60 * 1000);
-        connection.release();
-        return res.status(429).json({
-          success: false,
-          message: 'You can only submit once per day.',
-          next_attempt_available_at: nextAvailable.toISOString(),
-          hours_remaining: Math.ceil(24 - hoursSinceSubmit),
-        });
-      }
+    // 시도 횟수 초과 체크
+    if (quiz.attempt_count >= 3) {
+      connection.release();
+      return res.status(400).json({
+        success: false,
+        message: 'You have used all 3 attempts for this quiz.',
+        attempt_count: quiz.attempt_count,
+        remaining_attempts: 0,
+      });
     }
 
     // 정답 확인 (대소문자 구분 없이, 공백 제거 후 비교)
     const isCorrect = answer.trim().toLowerCase() === quiz.answer.trim().toLowerCase();
 
     if (isCorrect) {
-      // 정답: is_solve = 1, submitted_at = NOW()
+      // 정답: attempt_count 증가, is_solve = 1
+      const newAttemptCount = quiz.attempt_count + 1;
       await connection.execute(
-        'UPDATE quizzes SET is_solve = 1, submitted_at = NOW() WHERE id = ?',
-        [quizId]
+        'UPDATE quizzes SET is_solve = 1, attempt_count = ?, submitted_at = NOW() WHERE id = ?',
+        [newAttemptCount, quizId]
       );
       connection.release();
 
@@ -641,19 +639,33 @@ app.post('/api/quizzes/:quizId/submit', async (req, res) => {
         success: true,
         correct: true,
         message: 'Correct answer! Quiz solved successfully.',
+        attempt_count: newAttemptCount,
+        remaining_attempts: 0,
       });
     } else {
-      // 오답: is_solve 유지, submitted_at = NOW()
-      await connection.execute('UPDATE quizzes SET submitted_at = NOW() WHERE id = ?', [quizId]);
+      // 오답: attempt_count 증가, 3번 실패 시 is_solve = 1
+      const newAttemptCount = quiz.attempt_count + 1;
+      const shouldMarkAsSolved = newAttemptCount >= 3;
 
-      const nextAvailable = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await connection.execute(
+        'UPDATE quizzes SET attempt_count = ?, is_solve = ?, submitted_at = NOW() WHERE id = ?',
+        [newAttemptCount, shouldMarkAsSolved ? 1 : 0, quizId]
+      );
+
       connection.release();
+
+      const remainingAttempts = 3 - newAttemptCount;
 
       return res.status(200).json({
         success: true,
         correct: false,
-        message: 'Incorrect answer. You can try again tomorrow.',
-        next_attempt_available_at: nextAvailable.toISOString(),
+        message:
+          remainingAttempts > 0
+            ? `Incorrect answer. You have ${remainingAttempts} attempt(s) remaining.`
+            : 'Incorrect answer. You have used all 3 attempts.',
+        attempt_count: newAttemptCount,
+        remaining_attempts: remainingAttempts,
+        is_solve: shouldMarkAsSolved,
       });
     }
   } catch (error) {

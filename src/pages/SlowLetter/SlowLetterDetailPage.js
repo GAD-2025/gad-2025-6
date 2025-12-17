@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ReactComponent as ArrowLeftIcon } from '../../assets/icons/arrow-left.svg';
 import styled from 'styled-components';
+import { formatDate } from '../../utils/timezoneHelper';
 
 const PageWrapper = styled.div`
   width: 100%;
@@ -107,14 +108,6 @@ const SlowLetterDetailPage = () => {
 
   const handleBackClick = () => {
     navigate(-1);
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}. ${month}. ${day}`;
   };
 
   if (loading) {

@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
 import Button from '../../components/common/Button';
 import { ReactComponent as BadeCheckIcon } from '../../assets/icons/badge-check.svg';
@@ -10,7 +9,6 @@ import { formatDateTime, getRemainingTime } from '../../utils/timezoneHelper';
 const SlowLetterSentDetailPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const getPartnerName = () => {
     try {
@@ -27,22 +25,8 @@ const SlowLetterSentDetailPage = () => {
 
   const partnerName = getPartnerName();
 
-  const userCountry = user?.country;
-  const partnerCountry = (() => {
-    try {
-      const partnerData = localStorage.getItem('partner');
-      if (partnerData) {
-        const partner = JSON.parse(partnerData);
-        return partner.country || '';
-      }
-    } catch (error) {
-      console.error('Error parsing partner data:', error);
-    }
-    return '';
-  })();
-
   const letter = location.state?.letter;
-  const remaining = getRemainingTime(letter?.target_date, user?.timezone);
+  const remaining = getRemainingTime(letter?.target_date);
 
   return (
     <PageWrapper>
@@ -58,8 +42,8 @@ const SlowLetterSentDetailPage = () => {
                 <InfoText>Est. Arrival</InfoText>
               </InfoColumn>
               <InfoColumn>
-                <InfoText>{formatDateTime(letter.created_at, user?.timezone)}</InfoText>
-                <InfoText>{formatDateTime(letter.target_date, user?.timezone)}</InfoText>
+                <InfoText>{formatDateTime(letter.created_at)}</InfoText>
+                <InfoText>{formatDateTime(letter.target_date)}</InfoText>
               </InfoColumn>
             </InfoWrapper>
             {!remaining.isPast && (

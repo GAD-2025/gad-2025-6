@@ -82,6 +82,7 @@ CREATE TABLE `quizzes` (
   `hint` VARCHAR(255) NOT NULL,
   `image_url` TEXT NULL,
   `is_solve` TINYINT(1) DEFAULT '0',
+  `attempt_count` INT DEFAULT '0' NOT NULL,
   `submitted_at` TIMESTAMP NULL,
   `matching_id` INT NULL,
   `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,

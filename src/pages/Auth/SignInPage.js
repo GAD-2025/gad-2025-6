@@ -156,7 +156,7 @@ const SignInPage = () => {
           </div>
 
           {/* Social Login */}
-          <div
+          {/* <div
             style={{
               width: '100%',
               alignSelf: 'center',
@@ -193,7 +193,7 @@ const SignInPage = () => {
               <GoogleIcon />
               <KakaoIcon />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

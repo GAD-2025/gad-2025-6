@@ -8,6 +8,7 @@ import { getDdaysByMatchingId } from '../../api/dday';
 import { getQuizzes } from '../../api/quiz';
 import { getPartnerByMatchingId } from '../../api/auth';
 import { getLetters } from '../../api/letter';
+import { hasReachedTargetDate } from '../../utils/timezoneHelper';
 
 const HomePage = () => {
   const [ddays, setDdays] = React.useState([]);
@@ -86,8 +87,12 @@ const HomePage = () => {
         }
         const letters = await getLetters(userId);
         // 받은 편지 중 읽지 않은 편지 개수 계산
+        // Partner timezone 기준으로 target_date에 도달했고 읽지 않은 편지만 카운트
         const unreadCount = letters.filter(
-          (letter) => letter.user_id !== userId && letter.is_read === 0
+          (letter) =>
+            letter.user_id !== userId &&
+            letter.is_read === 0 &&
+            hasReachedTargetDate(letter.target_date, true)
         ).length;
         setUnreadLetterCount(unreadCount);
       } catch (error) {

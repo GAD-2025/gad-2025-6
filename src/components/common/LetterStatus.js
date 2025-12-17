@@ -1,10 +1,14 @@
 import { useMemo } from 'react';
 import { styled } from 'styled-components';
-import { useAuth } from '../../context/AuthContext';
 import { ReactComponent as ActiveIcon } from '../../assets/icons/letter-status-active.svg';
 import { ReactComponent as FocusedIcon } from '../../assets/icons/letter-status-focus.svg';
 import { ReactComponent as InactiveIcon } from '../../assets/icons/letter-status-inactive.svg';
-import { getCurrentTimeInUserTimezone, getDateInUserTimezone } from '../../utils/timezoneHelper';
+import {
+  toLocalDate,
+  getUserTimezone,
+  getPartnerTimezone,
+  parseTimezoneOffset,
+} from '../../utils/timezoneHelper';
 
 const StatusItem = ({
   hasLeftLine = true,
@@ -30,12 +34,34 @@ const StatusItem = ({
   );
 };
 
-// Calculate letter status based on target_date and is_read
-const calculateLetterStatus = (letter, userTimezone) => {
+// Calculate letter status based on target_date and is_read with timezone offset
+const calculateLetterStatus = (letter) => {
   if (!letter) return 'delivering';
 
-  const now = getCurrentTimeInUserTimezone(userTimezone);
-  const targetDate = getDateInUserTimezone(letter.target_date, userTimezone);
+  // Determine if this is a received letter (sent by partner)
+  let currentUserId = null;
+  try {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      currentUserId = user.id;
+    }
+  } catch (error) {
+    console.error('Error getting current user:', error);
+  }
+
+  const isReceivedLetter = currentUserId && letter.user_id !== currentUserId;
+
+  // Get appropriate timezone for status calculation
+  const timezone = isReceivedLetter ? getPartnerTimezone() : getUserTimezone();
+
+  // Convert target date from UTC to appropriate timezone
+  const targetDate = toLocalDate(letter.target_date, timezone);
+
+  // Get current time in UTC and apply the same timezone offset
+  const now = new Date();
+  const offset = parseTimezoneOffset(timezone);
+  const nowWithOffset = new Date(now.getTime() + offset);
 
   // Read 상태: is_read가 1
   if (letter.is_read === 1) {
@@ -43,7 +69,7 @@ const calculateLetterStatus = (letter, userTimezone) => {
   }
 
   // Delivered 상태: target_date에 도달했고 is_read가 0
-  if (targetDate && now >= targetDate) {
+  if (targetDate && nowWithOffset >= targetDate) {
     return 'delivered';
   }
 
@@ -83,19 +109,11 @@ const getStatusConfig = (currentStatus) => {
 };
 
 const LetterStatus = ({ letter }) => {
-  const { user } = useAuth();
-
   // Calculate current letter status
-  const currentStatus = useMemo(
-    () => calculateLetterStatus(letter, user?.timezone),
-    [letter, user?.timezone]
-  );
+  const currentStatus = useMemo(() => calculateLetterStatus(letter), [letter]);
 
   // Get status configuration for all items
-  const statusConfig = useMemo(
-    () => getStatusConfig(currentStatus),
-    [currentStatus]
-  );
+  const statusConfig = useMemo(() => getStatusConfig(currentStatus), [currentStatus]);
 
   return (
     <StatusWrapper>

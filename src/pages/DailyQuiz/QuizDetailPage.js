@@ -171,8 +171,9 @@ const QuizDetailPage = () => {
   const [answer, setAnswer] = useState('');
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showIncorrectModal, setShowIncorrectModal] = useState(false);
-  const [showSubmitLimitModal, setShowSubmitLimitModal] = useState(false);
-  const [nextAttemptTime, setNextAttemptTime] = useState(null);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [remainingAttempts, setRemainingAttempts] = useState(3);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -181,6 +182,8 @@ const QuizDetailPage = () => {
         const quizData = await getQuizById(quizId);
         if (quizData) {
           setQuiz(quizData);
+          setAttemptCount(quizData.attempt_count || 0);
+          setRemainingAttempts(3 - (quizData.attempt_count || 0));
         } else {
           console.error('Quiz not found');
         }
@@ -217,24 +220,31 @@ const QuizDetailPage = () => {
       const result = await submitQuizAnswer(quiz.id, answer);
 
       if (result.success) {
+        // 시도 횟수 업데이트
+        setAttemptCount(result.attempt_count);
+        setRemainingAttempts(result.remaining_attempts);
+
         if (result.correct) {
           setShowCorrectModal(true);
         } else {
+          // 오답 처리
+          setErrorMessage(result.message);
           setShowIncorrectModal(true);
         }
-        // 퀴즈 데이터 다시 가져오기 (submitted_at 업데이트 반영)
+
+        // 퀴즈 데이터 다시 가져오기
         const updatedQuiz = await getQuizById(quizId);
         if (updatedQuiz) {
           setQuiz(updatedQuiz);
         }
       } else {
-        // 429 에러 (제출 제한) 처리
-        if (result.next_attempt_available_at) {
-          setNextAttemptTime(result.next_attempt_available_at);
-          setShowSubmitLimitModal(true);
-        } else {
-          alert(result.message || 'Failed to submit answer.');
+        // 에러 처리 (시도 횟수 초과 등)
+        setErrorMessage(result.message);
+        if (result.attempt_count !== undefined) {
+          setAttemptCount(result.attempt_count);
+          setRemainingAttempts(result.remaining_attempts);
         }
+        alert(result.message);
       }
     } catch (error) {
       console.error('Error submitting answer:', error);
@@ -247,23 +257,11 @@ const QuizDetailPage = () => {
   const handleConfirmModal = () => {
     setShowCorrectModal(false);
     setShowIncorrectModal(false);
-    navigate('/daily-quiz');
-  };
-
-  const handleCloseSubmitLimitModal = () => {
-    setShowSubmitLimitModal(false);
-    navigate('/daily-quiz');
-  };
-
-  const formatNextAttemptTime = (isoString) => {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    // 정답이거나 남은 기회가 없으면 목록으로 이동
+    if (showCorrectModal || remainingAttempts === 0) {
+      navigate('/daily-quiz');
+    }
+    // 오답이지만 기회가 남았으면 모달만 닫기
   };
 
   const handleDeleteClick = async () => {
@@ -282,7 +280,7 @@ const QuizDetailPage = () => {
     }
   };
 
-  const isButtonDisabled = answer.trim() === '';
+  const isButtonDisabled = answer.trim() === '' || quiz.is_solve || attemptCount >= 3;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -313,12 +311,27 @@ const QuizDetailPage = () => {
             {isCreator || quiz.is_solve ? (
               <QuizAnswer>{quiz.answer}</QuizAnswer>
             ) : (
-              <QuizInput
-                type="text"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Enter the answer"
-              />
+              <>
+                <QuizInput
+                  type="text"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Enter the answer"
+                  disabled={attemptCount >= 3}
+                />
+                {attemptCount > 0 && (
+                  <div
+                    style={{
+                      color: '#FF6B6B',
+                      fontSize: '14px',
+                      marginTop: '8px',
+                      fontWeight: '600',
+                    }}
+                  >
+                    remaining count : {remainingAttempts}/3
+                  </div>
+                )}
+              </>
             )}
             <QuizHint>{quiz.hint}</QuizHint>
           </QuizInfo>
@@ -354,23 +367,22 @@ const QuizDetailPage = () => {
             <br />
             But that one's off 😢
           </ModalTitle>
-          <ModalDescription>You can try again tomorrow!</ModalDescription>
-          <Button variant="quiz" onClick={handleConfirmModal}>
-            Confirm
-          </Button>
-        </ModalContent>
-      </Modal>
-      <Modal open={showSubmitLimitModal} onClose={handleCancelSubmit}>
-        <ModalContent>
-          <ModalTitle>
-            Oops! ⏰
-            <br />
-            You can only submit once per day
-          </ModalTitle>
           <ModalDescription>
-            {nextAttemptTime && `Next attempt available: ${formatNextAttemptTime(nextAttemptTime)}`}
+            {remainingAttempts > 0 ? (
+              <>
+                You have ${remainingAttempts} attempts remaining.
+                <br />
+                Try again!
+              </>
+            ) : (
+              <>
+                You have used all 3 attempts.
+                <br />
+                The answer is "{quiz?.answer}"
+              </>
+            )}
           </ModalDescription>
-          <Button variant="quiz" onClick={handleCloseSubmitLimitModal}>
+          <Button variant="quiz" onClick={handleConfirmModal}>
             Confirm
           </Button>
         </ModalContent>

@@ -43,19 +43,10 @@ const QuizCard = ({ quiz, isHighlighted }) => {
     navigate(`/daily-quiz/${quiz.id}`, { state: { quiz } });
   };
 
-  // 제출 가능 여부 체크
-  const canAttempt = () => {
-    if (!quiz.submitted_at) return true;
-    const lastSubmit = new Date(quiz.submitted_at);
-    const now = new Date();
-    const hoursSinceSubmit = (now - lastSubmit) / (1000 * 60 * 60);
-    return hoursSinceSubmit >= 24;
-  };
-
   // 배지 표시 조건
   const showBadge = user?.id !== quiz.creator_id;
   const isSolved = quiz.is_solve === 1;
-  const isWaiting = !canAttempt() && !isSolved;
+  const attemptCount = quiz.attempt_count || 0;
 
   return (
     <div
@@ -77,12 +68,14 @@ const QuizCard = ({ quiz, isHighlighted }) => {
         cursor: 'pointer',
         height: 180,
         gap: 16,
-        opacity: isWaiting ? 0.6 : 1,
+        opacity: 1,
       }}
     >
       {/* 상태 배지 */}
-      {showBadge && isSolved && <StatusBadge solved>Solved ✓</StatusBadge>}
-      {showBadge && isWaiting && <StatusBadge>Wait 24h ⏰</StatusBadge>}
+      {/* {showBadge && isSolved && <StatusBadge solved>Solved ✓</StatusBadge>}
+      {showBadge && !isSolved && attemptCount > 0 && (
+        <StatusBadge>{3 - attemptCount} left 🎯</StatusBadge>
+      )} */}
 
       <div style={{}}>
         <div

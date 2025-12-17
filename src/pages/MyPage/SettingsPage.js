@@ -14,6 +14,13 @@ function SettingsPage() {
     navigate(-1);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('partner');
+    navigate('/signin');
+    window.location.reload();
+  };
+
   return (
     <PageWrapper>
       <TopBarWrapper>
@@ -39,6 +46,9 @@ function SettingsPage() {
         <Field label="My Invitation Code" variant="signin">
           <Input type="text" value={user?.user_code || ''} readOnly placeholder="Invitation Code" />
         </Field>
+        <LogoutWrapper>
+          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+        </LogoutWrapper>
       </ContentContainer>
     </PageWrapper>
   );
@@ -91,4 +101,18 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+`;
+
+const LogoutWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: end;
+`;
+
+const LogoutButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: underline;
 `;

@@ -1,49 +1,16 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import styled from 'styled-components';
 import Button from '../../components/common/Button';
 import { ReactComponent as LetterCheck } from '../../assets/icons/letter-check.svg';
 import LetterStatus from '../../components/common/LetterStatus';
+import { formatDateTime } from '../../utils/timezoneHelper';
 
 const LetterSented = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const letter = location.state?.letter;
-
-  // 사용자의 timezone 기준으로 날짜 포맷팅
-  const formatDateTime = (dateString) => {
-    if (!dateString || !user?.timezone) return '';
-
-    const date = new Date(dateString);
-
-    // UTC+09:00 형식에서 오프셋 추출
-    const timezoneMatch = user.timezone.match(/UTC([+-]\d{2}):(\d{2})/);
-    if (!timezoneMatch) return date.toLocaleString('ko-KR');
-
-    const offsetHours = parseInt(timezoneMatch[1]);
-    const offsetMinutes = parseInt(timezoneMatch[2]);
-    const totalOffsetMinutes =
-      offsetHours * 60 + (offsetHours >= 0 ? offsetMinutes : -offsetMinutes);
-
-    // UTC 시간에 오프셋 적용
-    const localTime = new Date(date.getTime() + totalOffsetMinutes * 60 * 1000);
-
-    // 포맷팅
-    const year = localTime.getUTCFullYear();
-    const month = String(localTime.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(localTime.getUTCDate()).padStart(2, '0');
-    const hours = String(localTime.getUTCHours()).padStart(2, '0');
-    const minutes = String(localTime.getUTCMinutes()).padStart(2, '0');
-
-    return `${year}. ${month}. ${day} ${hours}:${minutes}`;
-  };
-
-  console.log('Letter sent:', letter);
-  console.log('Formatted created_at:', formatDateTime(letter?.created_at));
-  console.log('Formatted target_date:', formatDateTime(letter?.target_date));
 
   return (
     <PageWrapper>

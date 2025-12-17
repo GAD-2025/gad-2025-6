@@ -1,7 +1,41 @@
 /**
- * Parse timezone offset from format like "UTC+09:00" to minutes
+ * Get user timezone from localStorage
+ * @returns {string|null} - Timezone string in format "UTC+09:00" or null
+ */
+export const getUserTimezone = () => {
+  try {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      return user.timezone;
+    }
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+  }
+  return null;
+};
+
+/**
+ * Get partner timezone from localStorage
+ * @returns {string|null} - Timezone string in format "UTC+09:00" or null
+ */
+export const getPartnerTimezone = () => {
+  try {
+    const partnerData = localStorage.getItem('partner');
+    if (partnerData) {
+      const partner = JSON.parse(partnerData);
+      return partner.timezone;
+    }
+  } catch (error) {
+    console.error('Error parsing partner data:', error);
+  }
+  return null;
+};
+
+/**
+ * Parse timezone offset from format like "UTC+09:00" to milliseconds
  * @param {string} timezone - Timezone string in format "UTC+09:00"
- * @returns {number} - Offset in minutes
+ * @returns {number} - Offset in milliseconds
  */
 export const parseTimezoneOffset = (timezone) => {
   if (!timezone) return 0;
@@ -11,100 +45,152 @@ export const parseTimezoneOffset = (timezone) => {
 
   const offsetHours = parseInt(timezoneMatch[1]);
   const offsetMinutes = parseInt(timezoneMatch[2]);
-  return offsetHours * 60 + (offsetHours >= 0 ? offsetMinutes : -offsetMinutes);
+  const totalMinutes = offsetHours * 60 + (offsetHours >= 0 ? offsetMinutes : -offsetMinutes);
+  return totalMinutes * 60 * 1000; // Convert to milliseconds
 };
 
 /**
- * Get current time in user's timezone
- * @param {string} timezone - Timezone string in format "UTC+09:00"
- * @returns {Date} - Current time adjusted to user's timezone
+ * Convert date string to Date object with timezone offset applied
+ * @param {string} dateString - Date string from server (UTC time)
+ * @param {string|null} timezone - Optional timezone string (if null, uses user's timezone)
+ * @returns {Date|null} - Date object with timezone offset applied
  */
-export const getCurrentTimeInUserTimezone = (timezone) => {
-  const now = new Date();
-  const offsetMinutes = parseTimezoneOffset(timezone);
-  return new Date(now.getTime() + offsetMinutes * 60 * 1000);
-};
-
-/**
- * Convert UTC date string to user's timezone
- * @param {string} dateString - UTC date string
- * @param {string} timezone - Timezone string in format "UTC+09:00"
- * @returns {Date|null} - Date adjusted to user's timezone, or null if dateString is invalid
- */
-export const getDateInUserTimezone = (dateString, timezone) => {
+export const toLocalDate = (dateString, timezone = null) => {
   if (!dateString) return null;
 
-  const date = new Date(dateString);
-  const offsetMinutes = parseTimezoneOffset(timezone);
-  return new Date(date.getTime() + offsetMinutes * 60 * 1000);
+  // Use provided timezone or default to user's timezone
+  const tz = timezone || getUserTimezone();
+  if (!tz) return new Date(dateString);
+
+  // Parse the UTC date string
+  // Format: "2025-12-17 09:40:57" -> treat as UTC by appending 'Z'
+  const utcDateString = dateString.replace(' ', 'T') + 'Z';
+  const utcDate = new Date(utcDateString);
+
+  // Get timezone offset in milliseconds
+  const offset = parseTimezoneOffset(tz);
+
+  // Apply timezone offset to UTC time
+  return new Date(utcDate.getTime() + offset);
 };
 
 /**
- * Check if target date has been reached in given timezone
- * @param {string} targetDateString - Target date string
- * @param {string} timezone - Timezone string in format "UTC+09:00"
- * @returns {boolean} - True if target date has been reached
+ * Format date string to "YYYY. MM. DD HH:mm" format with user's timezone
+ * @param {string} dateString - Date string from server (UTC time)
+ * @returns {string} - Formatted date string in user's timezone
  */
-export const hasReachedTargetDate = (targetDateString, timezone) => {
-  if (!targetDateString) return false;
+export const formatDateTime = (dateString) => {
+  if (!dateString) return '';
 
-  const now = getCurrentTimeInUserTimezone(timezone);
-  const targetDate = getDateInUserTimezone(targetDateString, timezone);
+  // Convert UTC time to user's local time
+  const localDate = toLocalDate(dateString);
+  if (!localDate) return '';
 
-  return targetDate && now >= targetDate;
-};
-
-/**
- * Format date string in user's timezone to "YYYY. MM. DD HH:mm" format
- * @param {string} dateString - UTC date string
- * @param {string} timezone - Timezone string in format "UTC+09:00"
- * @returns {string} - Formatted date string
- */
-export const formatDateTime = (dateString, timezone) => {
-  if (!dateString || !timezone) return '';
-
-  const localTime = getDateInUserTimezone(dateString, timezone);
-  if (!localTime) return '';
-
-  const year = localTime.getUTCFullYear();
-  const month = String(localTime.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(localTime.getUTCDate()).padStart(2, '0');
-  const hours = String(localTime.getUTCHours()).padStart(2, '0');
-  const minutes = String(localTime.getUTCMinutes()).padStart(2, '0');
+  // Extract date parts in UTC (because toLocalDate already added the offset)
+  const year = localDate.getUTCFullYear();
+  const month = String(localDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(localDate.getUTCDate()).padStart(2, '0');
+  const hours = String(localDate.getUTCHours()).padStart(2, '0');
+  const minutes = String(localDate.getUTCMinutes()).padStart(2, '0');
 
   return `${year}. ${month}. ${day} ${hours}:${minutes}`;
 };
 
 /**
- * Calculate remaining time until target date in user's timezone
- * @param {string} targetDateString - Target date string
- * @param {string} timezone - Timezone string in format "UTC+09:00"
+ * Format date string to "YYYY. MMM. DD" format with user's timezone
+ * @param {string} dateString - Date string from server (UTC time)
+ * @returns {string} - Formatted date string in user's timezone
+ */
+export const formatDate = (dateString) => {
+  if (!dateString) return '';
+
+  // Convert UTC time to user's local time
+  const localDate = toLocalDate(dateString);
+  if (!localDate) return '';
+
+  // Extract date parts in UTC (because toLocalDate already added the offset)
+  const year = localDate.getUTCFullYear();
+  const monthIndex = localDate.getUTCMonth();
+  const day = String(localDate.getUTCDate()).padStart(2, '0');
+
+  // Get month abbreviation
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const month = monthNames[monthIndex];
+
+  return `${year}. ${month}. ${day}`;
+};
+
+/**
+ * Calculate remaining time until target date with timezone offset
+ * @param {string} targetDateString - Target date string from server
+ * @param {boolean} usePartnerTimezone - If true, uses partner's timezone instead of user's
  * @returns {{days: number, hours: number, minutes: number, isPast: boolean}} - Remaining time breakdown
  */
-export const getRemainingTime = (targetDateString, timezone) => {
-  if (!targetDateString || !timezone) {
+export const getRemainingTime = (targetDateString, usePartnerTimezone = false) => {
+  if (!targetDateString) {
     return { days: 0, hours: 0, minutes: 0, isPast: false };
   }
 
-  const now = getCurrentTimeInUserTimezone(timezone);
-  const targetDate = getDateInUserTimezone(targetDateString, timezone);
+  // Get appropriate timezone
+  const timezone = usePartnerTimezone ? getPartnerTimezone() : getUserTimezone();
+
+  // Convert target date from UTC to specified timezone
+  const targetDate = toLocalDate(targetDateString, timezone);
 
   if (!targetDate) {
     return { days: 0, hours: 0, minutes: 0, isPast: false };
   }
 
-  // Calculate difference in milliseconds
-  const diffMs = targetDate - now;
+  // Get current time in UTC and apply the same timezone offset
+  const now = new Date();
+  const offset = parseTimezoneOffset(timezone);
+  const nowWithOffset = new Date(now.getTime() + offset);
 
-  // Check if target date has passed
+  const diffMs = targetDate - nowWithOffset;
+
   if (diffMs < 0) {
     return { days: 0, hours: 0, minutes: 0, isPast: true };
   }
 
-  // Convert to days, hours, minutes
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
   return { days, hours, minutes, isPast: false };
+};
+
+/**
+ * Check if target date has been reached with timezone offset
+ * @param {string} targetDateString - Target date string from server
+ * @param {boolean} usePartnerTimezone - If true, uses partner's timezone instead of user's
+ * @returns {boolean} - True if target date has been reached
+ */
+export const hasReachedTargetDate = (targetDateString, usePartnerTimezone = false) => {
+  if (!targetDateString) return false;
+
+  // Get appropriate timezone
+  const timezone = usePartnerTimezone ? getPartnerTimezone() : getUserTimezone();
+
+  // Convert target date from UTC to specified timezone
+  const targetDate = toLocalDate(targetDateString, timezone);
+
+  // Get current time in UTC and apply the same timezone offset
+  const now = new Date();
+  const offset = parseTimezoneOffset(timezone);
+  const nowWithOffset = new Date(now.getTime() + offset);
+
+  return targetDate && nowWithOffset >= targetDate;
 };

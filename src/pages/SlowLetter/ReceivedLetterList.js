@@ -34,30 +34,15 @@ const GridContainer = styled.div`
 `;
 
 const ReceivedLetterList = ({ letterData }) => {
-  const getPartnerTimezone = () => {
-    try {
-      const partnerData = localStorage.getItem('partner');
-      if (partnerData) {
-        const partner = JSON.parse(partnerData);
-        return partner.timezone;
-      }
-    } catch (error) {
-      console.error('Error parsing partner data:', error);
-    }
-    return null;
-  };
-
-  const partnerTimezone = getPartnerTimezone();
-
-  // Filter letters that have reached their target_date based on partner's timezone
+  // Filter letters that have reached their target_date with partner's timezone offset
   const filteredLetters = useMemo(() => {
     if (!letterData) return [];
 
     return letterData.filter((letter) => {
-      // Only show letters where target_date has been reached in partner's timezone
-      return hasReachedTargetDate(letter.target_date, partnerTimezone);
+      // Use partner's timezone for received letters to determine if they can be read
+      return hasReachedTargetDate(letter.target_date, true);
     });
-  }, [letterData, partnerTimezone]);
+  }, [letterData]);
 
   if (!filteredLetters || filteredLetters.length === 0) {
     return (

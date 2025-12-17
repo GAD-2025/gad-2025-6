@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { markLetterAsRead } from '../../api/letter';
+import { formatDate } from '../../utils/timezoneHelper';
 
 const CardWrapper = styled.div`
   width: 100%;
@@ -41,14 +42,6 @@ const DateText = styled.p`
   text-align: right;
   width: 100%;
 `;
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = date.toLocaleString('en-US', { month: 'short' });
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}. ${month}. ${day}`;
-};
 
 const LetterCard = ({ letter, isHighlighted, type }) => {
   const navigate = useNavigate();
